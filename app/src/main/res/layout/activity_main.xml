@@ -34,6 +34,13 @@
             android:text="Hello World!"
             app:layout_constraintTop_toTopOf="@+id/linearLayout" />
 
+        <TextView
+            android:id="@+id/twSeed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Hello World!"
+            app:layout_constraintTop_toTopOf="@+id/linearLayout" />
+
         <Button
             android:id="@+id/button"
             android:layout_width="wrap_content"
