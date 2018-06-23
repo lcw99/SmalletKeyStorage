@@ -64,7 +64,10 @@ public class MainActivity extends AppCompatActivity {
                 int nonce = data.getInt("nonce");
                 String gasPrice = data.getString("gasPrice");
                 String gasLimits = data.getString("gasLimits");
-                main.loadEtherOfflineSigner(privateKey, to, value, chainId, nonce, gasPrice, gasLimits);
+                String dataStr = data.getString("data");
+                if (dataStr == null)
+                    dataStr = "";
+                main.loadEtherOfflineSigner(privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr);
             }
         }
     };
@@ -275,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void loadEtherOfflineSigner(final String privateKey, final String to, final String value, final int chainId, final int nonce, final String gasPrice, final String gasLimits) {
+    public void loadEtherOfflineSigner(final String privateKey, final String to, final String value, final int chainId, final int nonce, final String gasPrice, final String gasLimits, final String dataStr) {
         // custom dialog
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.sign_dialog);
@@ -288,7 +291,8 @@ public class MainActivity extends AppCompatActivity {
                 "nonce: " + nonce + "\n" +
                 "chainId: " + chainId + "\n" +
                 "gasPrice: " + gasPrice + "\n" +
-                "gasLimits: " + gasLimits;
+                "gasLimits: " + gasLimits + "\n" +
+                "data:" + dataStr;
         text.setText(txInfo);
 
         Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
@@ -310,7 +314,8 @@ public class MainActivity extends AppCompatActivity {
                                 "" + chainId +"," +
                                 "" + nonce +"," +
                                 "'" + gasPrice +"'," +
-                                "'" + gasLimits +"'"
+                                "'" + gasLimits +"'," +
+                                "'" + dataStr +"'"
                                 +");";
                         Log.e("lcw", scriptParam);
                         webView.evaluateJavascript(scriptParam, new ValueCallback<String>() {
