@@ -248,12 +248,12 @@ public class MainActivity extends AppCompatActivity {
 
         webViewBIP39.setWebViewClient(new WebViewClient() {
             public void onPageFinished(WebView view, String url) {
-                webViewBIP39.evaluateJavascript("callGenerateClick('36', '12', '" + currentSeed + "');", new ValueCallback<String>() {
-                    @Override
-                    public void onReceiveValue(String s) {
-                        Log.i("keystorage", s);
-                    }
-                });
+            webViewBIP39.evaluateJavascript("callGenerateClick('36', '12', '" + currentSeed + "');", new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String s) {
+                    Log.i("keystorage", s);
+                }
+            });
             }
         });
 
@@ -276,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+        webViewBIP39.loadUrl("about:blank");
     }
 
     public void loadEtherOfflineSigner(final String privateKey, final String to, final String value, final int chainId, final int nonce, final String gasPrice, final String gasLimits, final String dataStr) {
@@ -295,9 +296,19 @@ public class MainActivity extends AppCompatActivity {
                 "data:" + dataStr;
         text.setText(txInfo);
 
-        Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
-        // if button is clicked, close the custom dialog
-        dialogButton.setOnClickListener(new View.OnClickListener() {
+        Button btReject = (Button) dialog.findViewById(R.id.btReject);
+        btReject.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+                Intent walletIntent = buildWalletIntent("TX_DATA");
+                walletIntent.putExtra("txData", "rejected");
+                sendBroadcast(walletIntent);
+            }
+        });
+
+        Button btConfirm = (Button) dialog.findViewById(R.id.btConfirm);
+        btConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dialog.dismiss();
@@ -350,38 +361,38 @@ public class MainActivity extends AppCompatActivity {
             mWebView.post(new Runnable() {
                 @Override
                 public void run() {
-                    mWebView.evaluateJavascript("getAddress(0);", new ValueCallback<String>() {
-                        @Override
-                        public void onReceiveValue(String s) {
-                            Log.i("webview", s);
-                            Toast.makeText(mContext, "addr=" + s, Toast.LENGTH_SHORT).show();
-                            try {
-                                JSONObject mainObject = new JSONObject(s);
-                                address = mainObject.getString("addr");
-                                privateKey = mainObject.getString("pk");
-                                twHello = (TextView) findViewById(R.id.text);
-                                twHello.post(new Runnable() {
-                                    public void run() {
-                                        twHello.setText(address);
-                                    }
-                                });
+                mWebView.evaluateJavascript("getAddress(0);", new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String s) {
+                    Log.i("webview", s);
+                    Toast.makeText(mContext, "addr=" + s, Toast.LENGTH_SHORT).show();
+                    try {
+                        JSONObject mainObject = new JSONObject(s);
+                        address = mainObject.getString("addr");
+                        privateKey = mainObject.getString("pk");
+                        twHello = (TextView) findViewById(R.id.text);
+                        twHello.post(new Runnable() {
+                            public void run() {
+                            twHello.setText(address);
+                            }
+                        });
 
-                            } catch (Exception ex) {};
-                            mKeyStorageService.setPublicAddress(address);
-                            getSeed();
-                            /*
-                            loadEtherOfflineSigner(
-                                    privateKey,
-                                    "0xF6791CB4A2037Ddb58221b84678a6ba992cda11d",
-                                    "1000000000",
-                                    3,
-                                    4,
-                                    "1000000000",
-                                    "300000"
-                            );
-                            */
-                        }
-                    });
+                    } catch (Exception ex) {};
+                    mKeyStorageService.setPublicAddress(address);
+                    getSeed();
+                    /*
+                    loadEtherOfflineSigner(
+                            privateKey,
+                            "0xF6791CB4A2037Ddb58221b84678a6ba992cda11d",
+                            "1000000000",
+                            3,
+                            4,
+                            "1000000000",
+                            "300000"
+                    );
+                    */
+                    }
+                });
                 }
             });
         }
@@ -402,7 +413,8 @@ public class MainActivity extends AppCompatActivity {
             Intent walletIntent = buildWalletIntent("TX_DATA");
             walletIntent.putExtra("txData", txRaw);
             sendBroadcast(walletIntent);
-            //startActivityForResult(walletIntent, Constants.SIGN_TX);
+            final WebView webView= initWebView(R.id.webview2);
+            webView.loadUrl("about:blank");
         }
 
     }
