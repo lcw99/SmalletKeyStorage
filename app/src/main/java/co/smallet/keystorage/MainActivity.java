@@ -1,9 +1,6 @@
 package co.smallet.keystorage;
 
-import android.app.Activity;
 import android.app.Dialog;
-import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +25,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.webkit.WebView;
 import android.widget.Toast;
@@ -41,39 +39,51 @@ import org.liquidplayer.service.Synchronizer;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     static String address = null;
     static String privateKey;
-    KeyStorageService mKeyStorageService;
     static MainActivity main;
 
     private TextView mTextMessage;
 
+    KeyStorageService mKeyStorageService;
     boolean mBound = false;
 
     static public Handler mHandle = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            if (msg.what == Constants.SIGN_TX){
-                Bundle data = msg.getData();
-                String to = data.getString("to");
-                String value = data.getString("value");
-                int chainId = data.getInt("chainId");
-                int nonce = data.getInt("nonce");
-                String gasPrice = data.getString("gasPrice");
-                String gasLimits = data.getString("gasLimits");
-                String dataStr = data.getString("data");
-                if (dataStr == null)
-                    dataStr = "";
-                main.loadEtherOfflineSigner(privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr);
+            switch (msg.what) {
+                case Constants.SIGN_TX:
+                    Bundle data = msg.getData();
+                    String to = data.getString("to");
+                    String value = data.getString("value");
+                    int chainId = data.getInt("chainId");
+                    String nonce = data.getString("nonce");
+                    String gasPrice = data.getString("gasPrice");
+                    String gasLimits = data.getString("gasLimits");
+                    String dataStr = data.getString("data");
+                    if (dataStr == null)
+                        dataStr = "";
+                    main.loadEtherOfflineSigner(privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr);
+                    break;
+                case Constants.RETURN_TX:
+                    Intent i = new Intent();
+                    i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
+                    i.putExtra("action", 8);
+                    i.putExtras(msg.getData());
+                    main.startService(i);
+
+                    final WebView webView = main.findViewById(R.id.webview2);
+                    webView.loadUrl("about:blank");
+                    break;
             }
         }
     };
 
     private ServiceConnection mConnection = new ServiceConnection() {
-
         @Override
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
@@ -199,6 +209,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onNewIntent(Intent intent){
+        super.onNewIntent(intent);
+    }
+
+    @Override
     protected void onStart() {
         super.onStart();
         // Bind to LocalService
@@ -209,12 +224,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
         // Unbind from the service
         if (mBound) {
             unbindService(mConnection);
             mBound = false;
         }
     }
+
     private WebView initWebView(int id) {
         final WebView webView = (WebView) findViewById(id);
         WebSettings webSettings = webView.getSettings();
@@ -279,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
         webViewBIP39.loadUrl("about:blank");
     }
 
-    public void loadEtherOfflineSigner(final String privateKey, final String to, final String value, final int chainId, final int nonce, final String gasPrice, final String gasLimits, final String dataStr) {
+    public void loadEtherOfflineSigner(final String privateKey, final String to, final String value, final int chainId, final String nonce, final String gasPrice, final String gasLimits, final String dataStr) {
         // custom dialog
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.sign_dialog);
@@ -410,47 +431,23 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void txReady(String txRaw) {
             Log.e("webview", "tx = " + txRaw);
-            Intent walletIntent = buildWalletIntent("TX_DATA");
-            walletIntent.putExtra("txData", txRaw);
-            sendBroadcast(walletIntent);
-            final WebView webView= initWebView(R.id.webview2);
-            webView.loadUrl("about:blank");
+            Message msg = new Message();
+            msg.what = Constants.RETURN_TX;
+            Bundle data = new Bundle();
+            data.putString("txRaw", txRaw);
+            msg.setData(data);
+
+            mHandle.sendMessage(msg);
         }
 
     }
 
-    private Intent buildWalletIntent(String resultType) {
+    public static Intent buildWalletIntent(String resultType) {
         Intent walletIntent = new Intent("co.smallet.wallet.RESULT_DATA");
         //walletIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         //walletIntent.setComponent(new ComponentName("co.smallet.wallet","co.smallet.wallet.MainActivity"));
         walletIntent.putExtra("resultType", resultType);
         return walletIntent;
     }
-
-    public static class MyReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d("keystorage", "onReceive===============================================");
-            if (intent.getAction().equals("co.smallet.keystorage.ASK_DATA")) {
-                String function = intent.getStringExtra("function");
-                if (function.equals("GET_PUBLIC_ADDRESS")) {
-                    Intent walletIntent = main.buildWalletIntent("PUBLIC_ADDRESS");
-                    String address = KeyStorageService.getPublicAddress();
-                    Log.e("keystorage", "addr=" + address);
-                    walletIntent.putExtra("ADDRESS", address);
-                    main.sendBroadcast(walletIntent);
-                } else if(function.equals("SIGN_TX")) {
-                    Intent i = new Intent(context, MainActivity.class);
-                    context.startActivity(i);
-                    Message msg = new Message();
-                    msg.what = Constants.SIGN_TX;
-                    msg.setData(intent.getBundleExtra("data"));
-                    MainActivity.mHandle.sendMessage(msg);
-                }
-            }
-
-        }
-    }
-
 
 }

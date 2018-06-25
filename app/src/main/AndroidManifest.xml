@@ -23,13 +23,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name="KeyStorageService" />
-        <receiver android:name=".MainActivity$MyReceiver"
-            android:permission="co.smallet.keystorage.permission.SMALLET">
-            <intent-filter>
-                <action android:name="co.smallet.keystorage.ASK_DATA" />
-            </intent-filter>
-        </receiver>
+        <service android:name=".KeyStorageService" android:exported="true"
+            android:permission="co.smallet.keystorage.permission.SMALLET"/>
     </application>
 
 </manifest>

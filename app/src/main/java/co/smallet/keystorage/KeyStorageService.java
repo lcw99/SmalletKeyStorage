@@ -1,18 +1,28 @@
 package co.smallet.keystorage;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.widget.Toast;
 import android.os.Process;
 
 
 public class KeyStorageService extends Service {
+    static final int NOTIFICATION_ID = 543;
+    public static boolean isServiceRunning = false;
+
     // Binder given to clients
     private final IBinder mBinder = new LocalBinder();
 
@@ -38,8 +48,35 @@ public class KeyStorageService extends Service {
             // Normally we would do some work here, like download a file.
             // For our sample, we just sleep for 5 seconds.
             try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
+                Log.e("keystoreageservce", "what=" + msg.what);
+                switch(msg.what) {
+                    case 9:
+                        /*
+                        Intent walletIntent = MainActivity.buildWalletIntent("PUBLIC_ADDRESS");
+                        String address = KeyStorageService.getPublicAddress();
+                        Log.e("keystorage", "addr=" + address);
+                        walletIntent.putExtra("ADDRESS", address);
+                        sendBroadcast(walletIntent);
+                        */
+
+                        Intent i = new Intent();
+                        i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
+                        i.putExtra("action", msg.what);
+                        i.putExtra("PUBLIC_ADDRESS", getPublicAddress());
+                        ComponentName c = startService(i);
+
+                        break;
+                    case 8:
+                        i = new Intent(KeyStorageService.this, MainActivity.class);
+                        startActivity(i);
+                        Message msgToSend = new Message();
+                        msgToSend.what = Constants.SIGN_TX;
+                        msgToSend.setData(msg.getData());
+                        MainActivity.mHandle.sendMessage(msgToSend);
+                }
+
+                //Thread.sleep(5000);
+            } catch (Exception e) {
                 // Restore interrupt status.
                 Thread.currentThread().interrupt();
             }
@@ -62,6 +99,8 @@ public class KeyStorageService extends Service {
         // Get the HandlerThread's Looper and use it for our Handler
         mServiceLooper = thread.getLooper();
         mServiceHandler = new ServiceHandler(mServiceLooper);
+
+        startServiceWithNotification();
     }
 
     @Override
@@ -72,9 +111,10 @@ public class KeyStorageService extends Service {
         // start ID so we know which request we're stopping when we finish the job
         Message msg = mServiceHandler.obtainMessage();
         msg.arg1 = startId;
+        msg.what = intent.getIntExtra("action", 0);
+        msg.setData(intent.getExtras());
         mServiceHandler.sendMessage(msg);
 
-        // If we get killed, after returning from here, restart
         return START_STICKY;
     }
 
@@ -86,6 +126,7 @@ public class KeyStorageService extends Service {
 
     @Override
     public void onDestroy() {
+        isServiceRunning = false;
         Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
     }
 
@@ -94,5 +135,36 @@ public class KeyStorageService extends Service {
         public KeyStorageService getService(){
             return KeyStorageService.this;
         }
+    }
+
+    void startServiceWithNotification() {
+        if (isServiceRunning) return;
+        isServiceRunning = true;
+
+        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
+        notificationIntent.setAction(Constants.ACTION_MAIN);  // A string containing the action name
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_foreground);
+
+        Notification notification = new Notification.Builder(this)
+                .setContentTitle(getResources().getString(R.string.app_name))
+                .setTicker(getResources().getString(R.string.app_name))
+                .setContentText(getResources().getString(R.string.app_name))
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                //.setLargeIcon(R.drawable.ic_launcher_foreground)
+                .setContentIntent(contentPendingIntent)
+                .setOngoing(true)
+//                .setDeleteIntent(contentPendingIntent)  // if needed
+                .build();
+        notification.flags = notification.flags | Notification.FLAG_NO_CLEAR;     // NO_CLEAR makes the notification stay when the user performs a "delete all" command
+        startForeground(NOTIFICATION_ID, notification);
+    }
+
+    void stopMyService() {
+        stopForeground(true);
+        stopSelf();
+        isServiceRunning = false;
     }
 }
