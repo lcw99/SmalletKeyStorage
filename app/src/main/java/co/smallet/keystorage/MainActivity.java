@@ -36,7 +36,12 @@ import org.liquidplayer.service.MicroService;
 import org.liquidplayer.service.MicroService.ServiceStartListener;
 import org.liquidplayer.service.MicroService.EventListener;
 import org.liquidplayer.service.Synchronizer;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.Web3jFactory;
+import org.web3j.protocol.http.HttpService;
+import org.web3j.utils.Convert;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
@@ -50,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
     KeyStorageService mKeyStorageService;
     boolean mBound = false;
+    Web3j web3j = null;
 
     static public Handler mHandle = new Handler(Looper.getMainLooper()) {
         @Override
@@ -72,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
                 case Constants.RETURN_TX:
                     Intent i = new Intent();
                     i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
-                    i.putExtra("action", 8);
+                    i.putExtra("action", Constants.SERVICE_SIGN_TX);
                     i.putExtras(msg.getData());
                     main.startService(i);
 
@@ -91,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
             KeyStorageService.LocalBinder binder = (KeyStorageService.LocalBinder) service;
             mKeyStorageService = binder.getService();
             mBound = true;
+            mKeyStorageService.setMainActivity(MainActivity.this);
             if (address == null)
                 loadKeyGenerator(null);
         }
@@ -127,6 +134,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         main = this;
+
+        main = this;
+        web3j = Web3jFactory.build(new HttpService("https://ropsten.infura.io/du9Plyu1xJErXebTWjsn"));
 
         mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
@@ -205,7 +215,6 @@ public class MainActivity extends AppCompatActivity {
                 main.loadKeyGenerator("");
             }
         });
-
     }
 
     @Override
@@ -308,11 +317,13 @@ public class MainActivity extends AppCompatActivity {
 
         // set the custom dialog components - text, image and button
         TextView text = (TextView) dialog.findViewById(R.id.text);
+        BigDecimal val = Convert.fromWei(value, Convert.Unit.ETHER);
+        BigDecimal gasPriceDec = Convert.fromWei(gasPrice, Convert.Unit.GWEI);
         String txInfo = "to: " + to + "\n" +
-                "value: " + value + "\n" +
+                "value: " + val.toString() + " Ether\n" +
                 "nonce: " + nonce + "\n" +
                 "chainId: " + chainId + "\n" +
-                "gasPrice: " + gasPrice + "\n" +
+                "gasPrice: " + gasPriceDec.toString() + " GWEI\n" +
                 "gasLimits: " + gasLimits + "\n" +
                 "data:" + dataStr;
         text.setText(txInfo);
@@ -322,9 +333,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 dialog.dismiss();
-                Intent walletIntent = buildWalletIntent("TX_DATA");
-                walletIntent.putExtra("txData", "rejected");
-                sendBroadcast(walletIntent);
+                Message msg = new Message();
+                msg.what = Constants.RETURN_TX;
+                Bundle data = new Bundle();
+                data.putString("txRaw", "rejected");
+                msg.setData(data);
+                mHandle.sendMessage(msg);
             }
         });
 

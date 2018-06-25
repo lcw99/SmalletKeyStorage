@@ -1,5 +1,6 @@
 package co.smallet.keystorage;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -26,6 +27,7 @@ public class KeyStorageService extends Service {
     // Binder given to clients
     private final IBinder mBinder = new LocalBinder();
 
+    private MainActivity main;
     private Looper mServiceLooper;
     private ServiceHandler mServiceHandler;
     static String publicAddress;
@@ -50,7 +52,7 @@ public class KeyStorageService extends Service {
             try {
                 Log.e("keystoreageservce", "what=" + msg.what);
                 switch(msg.what) {
-                    case 9:
+                    case Constants.SERVICE_GET_ADDRESS:
                         /*
                         Intent walletIntent = MainActivity.buildWalletIntent("PUBLIC_ADDRESS");
                         String address = KeyStorageService.getPublicAddress();
@@ -61,14 +63,16 @@ public class KeyStorageService extends Service {
 
                         Intent i = new Intent();
                         i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
-                        i.putExtra("action", msg.what);
+                        i.putExtra("action", Constants.SERVICE_GET_ADDRESS);
                         i.putExtra("PUBLIC_ADDRESS", getPublicAddress());
                         ComponentName c = startService(i);
 
                         break;
-                    case 8:
+                    case Constants.SERVICE_SIGN_TX:
                         i = new Intent(KeyStorageService.this, MainActivity.class);
                         startActivity(i);
+                        if (main == null)
+                            break;
                         Message msgToSend = new Message();
                         msgToSend.what = Constants.SIGN_TX;
                         msgToSend.setData(msg.getData());
@@ -105,7 +109,7 @@ public class KeyStorageService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "KeyStorage service starting", Toast.LENGTH_SHORT).show();
 
         // For each start request, send a message to start a job and deliver the
         // start ID so we know which request we're stopping when we finish the job
@@ -127,7 +131,7 @@ public class KeyStorageService extends Service {
     @Override
     public void onDestroy() {
         isServiceRunning = false;
-        Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "KeyStorage  service done", Toast.LENGTH_SHORT).show();
     }
 
     //returns the instance of the service
@@ -135,6 +139,10 @@ public class KeyStorageService extends Service {
         public KeyStorageService getService(){
             return KeyStorageService.this;
         }
+    }
+
+    public void setMainActivity(MainActivity act) {
+        main= act;
     }
 
     void startServiceWithNotification() {
@@ -146,14 +154,14 @@ public class KeyStorageService extends Service {
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
-        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher_foreground);
+        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_stat_key_storage);
 
         Notification notification = new Notification.Builder(this)
                 .setContentTitle(getResources().getString(R.string.app_name))
                 .setTicker(getResources().getString(R.string.app_name))
                 .setContentText(getResources().getString(R.string.app_name))
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                //.setLargeIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.ic_stat_key_storage)
+                .setLargeIcon(icon)
                 .setContentIntent(contentPendingIntent)
                 .setOngoing(true)
 //                .setDeleteIntent(contentPendingIntent)  // if needed
