@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,12 +25,17 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.webkit.WebView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.liquidplayer.service.MicroService;
@@ -44,12 +50,16 @@ import org.web3j.utils.Convert;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     static String address = null;
     static String privateKey;
     static MainActivity main;
+    EditText etSeed;
+    Spinner spCoins;
 
     private TextView mTextMessage;
 
@@ -98,8 +108,6 @@ public class MainActivity extends AppCompatActivity {
             mKeyStorageService = binder.getService();
             mBound = true;
             mKeyStorageService.setMainActivity(MainActivity.this);
-            if (address == null)
-                loadKeyGenerator(null);
         }
 
         @Override
@@ -135,7 +143,10 @@ public class MainActivity extends AppCompatActivity {
 
         main = this;
 
-        main = this;
+        etSeed = (EditText) findViewById(R.id.etSeed);
+        spCoins = (Spinner) findViewById(R.id.spCoins);
+        webViewBIP39 = initWebView(R.id.webview);
+
         web3j = Web3jFactory.build(new HttpService("https://ropsten.infura.io/du9Plyu1xJErXebTWjsn"));
 
         mTextMessage = (TextView) findViewById(R.id.message);
@@ -200,26 +211,31 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button btGenerate = (Button) findViewById(R.id.btGenerate);
-        btGenerate.setOnClickListener(new View.OnClickListener() {
+        Button btImportSeed = (Button) findViewById(R.id.btImportSeed);
+        btImportSeed.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                main.loadKeyGenerator(null);
+                String seed = etSeed.getText().toString();
+                main.loadKeyGenerator(seed);
             }
         });
 
-        Button btGenerate2 = (Button) findViewById(R.id.btGenerate2);
-        btGenerate2.setOnClickListener(new View.OnClickListener() {
+        Button btGenerateNew = (Button) findViewById(R.id.btGenerateNew);
+        btGenerateNew.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 main.loadKeyGenerator("");
             }
         });
+
+        loadSeed();
+        loadKeyGenerator(currentSeed);
     }
 
     @Override
     protected void onNewIntent(Intent intent){
         super.onNewIntent(intent);
+        setIntent(intent);
     }
 
     @Override
@@ -245,6 +261,50 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    boolean coinPopulated = false;
+    private void populateCoins() {
+        if (coinPopulated)
+            return;
+        webViewBIP39.evaluateJavascript("getNetworkList();", new ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String networkListStr) {
+                try {
+                    networkListStr = networkListStr.substring(1, networkListStr.length() - 1).replace("\\","");
+                    JSONArray networkList = new JSONArray(networkListStr);
+                    List<String> list = new ArrayList<String>();
+                    for (int i = 0; i < networkList.length(); i++) {
+                        list.add(((JSONObject)networkList.get(i)).get("name").toString());
+                    }
+                    ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(MainActivity.this,
+                            android.R.layout.simple_spinner_item, list);
+                    dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spCoins.setAdapter(dataAdapter);
+                    spCoins.setOnItemSelectedListener(new CustomOnItemSelectedListener());
+                    spCoins.setSelection(currentCoin);
+                    coinPopulated = true;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public class CustomOnItemSelectedListener implements OnItemSelectedListener {
+        public void onItemSelected(AdapterView<?> parent, View view, int pos,long id) {
+            Toast.makeText(parent.getContext(), "Selected Coin : " + parent.getItemAtPosition(pos).toString(), Toast.LENGTH_SHORT).show();
+            webViewBIP39.evaluateJavascript("callGenerateClick('"+ pos + "', '12', '" + currentSeed + "');", new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String s) {
+                    Log.i("keystorage", s);
+                    saveSeed();
+                }
+            });
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> arg0) {
+        }
+    }
     private WebView initWebView(int id) {
         final WebView webView = (WebView) findViewById(id);
         WebSettings webSettings = webView.getSettings();
@@ -265,48 +325,61 @@ public class MainActivity extends AppCompatActivity {
         return webView;
     }
 
+    // note globe between process will soon hello rain bone easily potato fragile;
     String currentSeed = null;
+    int currentCoin = 36;
     WebView webViewBIP39;
     private void loadKeyGenerator(String seed) {
+        Toast.makeText(this, "Seed Generating", Toast.LENGTH_SHORT).show();
         currentSeed = seed;
-        if (seed == null)
-            currentSeed = "note globe between process will soon hello rain bone easily potato fragile";
 
-        webViewBIP39 = initWebView(R.id.webview);
         JavaScriptInterfaceKeyStorage jsInterface = new JavaScriptInterfaceKeyStorage(this, webViewBIP39);
         webViewBIP39.addJavascriptInterface(jsInterface, "JSInterface");
 
         webViewBIP39.setWebViewClient(new WebViewClient() {
             public void onPageFinished(WebView view, String url) {
-            webViewBIP39.evaluateJavascript("callGenerateClick('36', '12', '" + currentSeed + "');", new ValueCallback<String>() {
-                @Override
-                public void onReceiveValue(String s) {
-                    Log.i("keystorage", s);
-                }
-            });
+                webViewBIP39.evaluateJavascript("callGenerateClick('" + currentCoin + "', '12', '" + currentSeed + "');", new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String s) {
+                        Log.i("keystorage", s);
+                    }
+                });
+                populateCoins();
             }
         });
 
         webViewBIP39.loadUrl("file:///android_res/raw/bip39standalone.html");
     }
 
-    TextView twSeed;
     public void getSeed() {
-        twSeed = (TextView) findViewById(R.id.twSeed);
         webViewBIP39.evaluateJavascript("getSeed();", new ValueCallback<String>() {
             @Override
             public void onReceiveValue(String seed) {
                 Log.i("keystorage", "seed=" + seed);
-                currentSeed = seed;
-                twSeed.post(new Runnable() {
+                currentSeed = seed.replace("\"", "");
+                etSeed.post(new Runnable() {
                     @Override
                     public void run() {
-                        twSeed.setText(currentSeed);
+                        etSeed.setText(currentSeed, TextView.BufferType.EDITABLE);
+                        saveSeed();
                     }
                 });
             }
         });
-        webViewBIP39.loadUrl("about:blank");
+        //webViewBIP39.loadUrl("about:blank");
+    }
+
+    private void saveSeed() {
+        SharedPreferences.Editor editor = getSharedPreferences(Constants.MY_PREFS_NAME, MODE_PRIVATE).edit();
+        editor.putString("seed", currentSeed);
+        editor.putInt("coin", currentCoin);
+        editor.apply();
+    }
+
+    private void loadSeed() {
+        SharedPreferences prefs = getSharedPreferences(Constants.MY_PREFS_NAME, MODE_PRIVATE);
+        currentSeed = prefs.getString("seed", "");
+        currentCoin = prefs.getInt("coin", 36);
     }
 
     public void loadEtherOfflineSigner(final String privateKey, final String to, final String value, final int chainId, final String nonce, final String gasPrice, final String gasLimits, final String dataStr) {
