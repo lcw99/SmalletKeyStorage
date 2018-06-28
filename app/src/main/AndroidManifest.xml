@@ -2,10 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="co.smallet.keystorage">
 
-    <permission android:name="co.smallet.keystorage.permission.SMALLET"
+    <permission
+        android:name="co.smallet.keystorage.permission.SMALLET"
         android:protectionLevel="signature" />
 
-    <uses-permission android:name="co.smallet.keystorage.permission.SMALLET"/>
+    <uses-permission android:name="co.smallet.keystorage.permission.SMALLET" />
+
+    <!-- To auto-complete the email text field in the login form with the user's emails -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.READ_PROFILE" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <application
         android:allowBackup="true"
@@ -20,11 +26,19 @@
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".KeyStorageService" android:exported="true"
-            android:permission="co.smallet.keystorage.permission.SMALLET"/>
+
+        <activity android:name=".LoginActivity" android:theme="@style/AppTheme.Dark" />
+        <activity android:name=".SignupActivity" android:theme="@style/AppTheme.Dark" />
+
+        <service
+            android:name=".KeyStorageService"
+            android:exported="true"
+            android:permission="co.smallet.keystorage.permission.SMALLET" />
+
     </application>
 
 </manifest>

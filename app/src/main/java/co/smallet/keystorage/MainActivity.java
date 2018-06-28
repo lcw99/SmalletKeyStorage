@@ -54,6 +54,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import co.smallet.smalletlib.GlobalConstants;
+
 public class MainActivity extends AppCompatActivity {
     static String address = null;
     static String privateKey;
@@ -88,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
                 case Constants.RETURN_TX:
                     Intent i = new Intent();
                     i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
-                    i.putExtra("action", Constants.SERVICE_SIGN_TX);
+                    i.putExtra("action", GlobalConstants.SERVICE_SIGN_TX);
                     i.putExtras(msg.getData());
                     main.startService(i);
 
@@ -244,6 +246,10 @@ public class MainActivity extends AppCompatActivity {
         // Bind to LocalService
         Intent intent = new Intent(this, KeyStorageService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+
+        intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+
     }
 
     @Override

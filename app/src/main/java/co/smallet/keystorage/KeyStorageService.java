@@ -19,6 +19,8 @@ import android.util.Log;
 import android.widget.Toast;
 import android.os.Process;
 
+import co.smallet.smalletlib.GlobalConstants;
+
 
 public class KeyStorageService extends Service {
     static final int NOTIFICATION_ID = 543;
@@ -52,7 +54,7 @@ public class KeyStorageService extends Service {
             try {
                 Log.e("keystoreageservce", "what=" + msg.what);
                 switch(msg.what) {
-                    case Constants.SERVICE_GET_ADDRESS:
+                    case GlobalConstants.SERVICE_GET_ADDRESS:
                         /*
                         Intent walletIntent = MainActivity.buildWalletIntent("PUBLIC_ADDRESS");
                         String address = KeyStorageService.getPublicAddress();
@@ -63,12 +65,12 @@ public class KeyStorageService extends Service {
 
                         Intent i = new Intent();
                         i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
-                        i.putExtra("action", Constants.SERVICE_GET_ADDRESS);
+                        i.putExtra("action", GlobalConstants.SERVICE_GET_ADDRESS);
                         i.putExtra("PUBLIC_ADDRESS", getPublicAddress());
                         ComponentName c = startService(i);
 
                         break;
-                    case Constants.SERVICE_SIGN_TX:
+                    case GlobalConstants.SERVICE_SIGN_TX:
                         i = new Intent(KeyStorageService.this, MainActivity.class);
                         startActivity(i);
                         if (main == null)

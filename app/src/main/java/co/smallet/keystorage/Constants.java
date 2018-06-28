@@ -8,6 +8,4 @@ public class Constants {
     public static final String ACTION_MAIN = "co.smallet.keystorage.ACTION_MAIN";
     public static final String MY_PREFS_NAME = "co.smallet.keystorage.PREF";
 
-    public static final int SERVICE_GET_ADDRESS = 90;
-    public static final int SERVICE_SIGN_TX = 91;
 }
