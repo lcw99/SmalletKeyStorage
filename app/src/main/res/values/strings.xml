@@ -4,4 +4,12 @@
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
     <string name="title_activity_new_user">Wallet Creation</string>
+    <string name="done_seed_backup">Done Seed Backup</string>
+    <string name="password_input_error">4 or more alphanumeric characters</string>
+    <string name="passwordHash">passwordHash</string>
+    <string name="master_seed">master_seed</string>
+    <string name="encSeed">encSeed</string>
+    <string name="ivSeed">ivSeed</string>
+    <string name="hdCoinIdColon">hdCoinId:</string>
+    <string name="issuedCoins">issuedCoins</string>
 </resources>

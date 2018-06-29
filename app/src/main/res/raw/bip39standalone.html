@@ -6876,7 +6876,7 @@ button.close {
     <body>
         <div class="container">
 
-            <h1 class="text-center">Mnemonic Code Converter</h1>
+            <h1 class="text-center">Generation Process</h1>
             <p class="version">v0.3.6</p>
             <hr>
             <div class="row">
@@ -106159,14 +106159,15 @@ window.Entropy = new (function() {
   var generateClickedGlobal;
   var networkList = [];
 
-  function callGenerateClick(network, stength, phrase) {
-    DOM.network.val(network);
+  function callGenerateClick(coin, stength, seed, passphrase) {
+    DOM.network.val(coin);
     DOM.network.trigger("change");
     DOM.generatedStrength.val(stength);
-    if (phrase == '')
+    if (seed == '')
       generateClickedGlobal();
     else {
-      DOM.phrase.val(phrase);
+      DOM.phrase.val(seed);
+      DOM.passphrase.val(passphrase);
       DOM.phrase.trigger("input");
     }
     return "generate ok";
@@ -106184,12 +106185,23 @@ window.Entropy = new (function() {
     return DOM.phrase.val();
   }
 
-  function getNetworkList() {
-    var s = JSON.stringify(networkList);
-    return s;
-  }
+  function getSeedAndAddress(n) {
+    var s = "table tr:nth-child(" + (n + 1) + ") td:nth-child(2)";
+    var addr = $(s).find("span").html();
+    s = "table tr:nth-child(" + (n + 1) + ") td:nth-child(4)";
+    var pk = $(s).find("span").html();
+    return {seed:DOM.phrase.val(), address:addr, privatekey:pk};
+}
 
-  // end lcw
+  function getNetworkList() {
+	var list = [];
+	for(var i=0; i<networkList.length; i++) {
+	    list[i] = {name:networkList[i].name, hdCoin:(networkList[i].onSelect+"").match(/\d+/)+""};
+	}
+	var s = JSON.stringify(list);
+	return s;
+  }
+    // end lcw
   (function() {
 
     // mnemonics is populated as required by getLanguage
@@ -106710,6 +106722,8 @@ window.Entropy = new (function() {
         DOM.feedback
             .text(errorText)
             .show();
+        // lcw
+        window.JSInterface.walletAddressReady("error=" + errorText);
     }
 
     function hideValidationError() {
@@ -107078,7 +107092,7 @@ window.Entropy = new (function() {
                     hidePending();
                     updateCsv();
                     // lcw
-                    window.JSInterface.walletAddressReady("ok==================");
+                    window.JSInterface.walletAddressReady("ok");
                 }
             }, 50)
         }

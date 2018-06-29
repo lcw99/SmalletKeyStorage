@@ -1,20 +1,29 @@
 package co.smallet.keystorage;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -22,14 +31,19 @@ import butterknife.ButterKnife;
 public class SignupActivity extends AppCompatActivity {
     private static final String TAG = "SignupActivity";
 
-    @BindView(R.id.input_name) EditText _nameText;
-    @BindView(R.id.input_address) EditText _addressText;
-    @BindView(R.id.input_email) EditText _emailText;
-    @BindView(R.id.input_mobile) EditText _mobileText;
+    @BindView(R.id.ck_have_seed) CheckBox _haveSeedCheckbox;
+    @BindView(R.id.input_seed) EditText _seedText;
+    @BindView(R.id.input_pass_phrase) EditText _passphraseText;
     @BindView(R.id.input_password) EditText _passwordText;
     @BindView(R.id.input_reEnterPassword) EditText _reEnterPasswordText;
     @BindView(R.id.btn_signup) Button _signupButton;
     @BindView(R.id.link_login) TextView _loginLink;
+    @BindView(R.id.text_backup_seed) TextView _backupSeedInfo;
+
+    String password;
+    String seedGenerated = "";
+    String wordCount = "12";
+    String passphrase = "";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,44 +69,87 @@ public class SignupActivity extends AppCompatActivity {
             }
         });
 
-        final HashCode hashCode = Hashing.sha256().hashString("mypassword", Charset.defaultCharset());
+        _haveSeedCheckbox.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                if (isChecked) {
+                    _seedText.setVisibility(View.VISIBLE);
+                    _passphraseText.setVisibility(View.VISIBLE);
+                    _seedText.requestFocus();
+                    _signupButton.setText("Import Seed");
+                } else {
+                    _seedText.setVisibility(View.GONE);
+                    _passphraseText.setVisibility(View.GONE);
+                    _signupButton.setText("Create Account");
+                }
+            }
+        });
     }
 
     public void signup() {
         Log.d(TAG, "Signup");
+        if (_signupButton.getText().equals(getResources().getString(R.string.done_seed_backup)) ||
+                _signupButton.getText().equals("Login")) {
+            final String passwordHash = Hashing.sha256().hashString(password, Charset.defaultCharset()).toString();
+            SharedPreferences.Editor editor = getSharedPreferences(Constants.MY_PREFS_NAME, MODE_PRIVATE).edit();
+            editor.putString(getString(R.string.passwordHash), passwordHash);
+            editor.commit();
+
+            Utils.encryptMasterSeedAndSave(this, seedGenerated, passphrase);
+
+            finish();
+            return;
+        }
+
+        _backupSeedInfo.setVisibility(View.GONE);
 
         if (!validate()) {
             onSignupFailed();
             return;
         }
 
-        _signupButton.setEnabled(false);
+        final String seedText = _seedText.getText().toString();
+        passphrase = _passphraseText.getText().toString();
+        SeedGenerationDialog dialog = new SeedGenerationDialog(this, seedText, passphrase, wordCount, 60, 0,  new SeedGenerationDialog.ReturnValueEvent() {
+            @Override
+            public void onReturnValue(String data, HashMap<Integer, Coin> coinList) {
+                if (data.startsWith("error")) {
+                    _backupSeedInfo.setText("Import failed - " + data.replace("error=", ""));
+                    _backupSeedInfo.setVisibility(View.VISIBLE);
+                    return;
+                }
+                JSONObject mainObject = null;
+                String seed = "";
+                try {
+                    mainObject = new JSONObject(data);
+                    seed = mainObject.getString("seed");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    return;
+                }
 
-        final ProgressDialog progressDialog = new ProgressDialog(SignupActivity.this,
-                R.style.AppTheme_Dark_Dialog);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Creating Account...");
-        progressDialog.show();
-
-        String name = _nameText.getText().toString();
-        String address = _addressText.getText().toString();
-        String email = _emailText.getText().toString();
-        String mobile = _mobileText.getText().toString();
-        String password = _passwordText.getText().toString();
-        String reEnterPassword = _reEnterPasswordText.getText().toString();
-
-        // TODO: Implement your own signup logic here.
-
-        new android.os.Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        // On complete call either onSignupSuccess or onSignupFailed
-                        // depending on success
-                        onSignupSuccess();
-                        // onSignupFailed();
-                        progressDialog.dismiss();
-                    }
-                }, 3000);
+                seedGenerated = seed;
+                _seedText.setVisibility(View.VISIBLE);
+                _seedText.setText(seed, TextView.BufferType.EDITABLE);
+                _seedText.setKeyListener(null);
+                _haveSeedCheckbox.setVisibility(View.GONE);
+                if (!seedText.equals("")) {
+                    _backupSeedInfo.setText("Master seed Import successful.");
+                    _signupButton.setText("Login");
+                } else {
+                    _signupButton.setText(R.string.done_seed_backup);
+                }
+                if (passphrase.equals(""))
+                    _passphraseText.setVisibility(View.GONE);
+                _backupSeedInfo.setVisibility(View.VISIBLE);
+                password = _passwordText.getText().toString();
+                _passwordText.setText("", TextView.BufferType.EDITABLE);
+                _passwordText.setVisibility(View.GONE);
+                _reEnterPasswordText.setText("", TextView.BufferType.EDITABLE);
+                _reEnterPasswordText.setVisibility(View.GONE);
+            }
+        });
+        dialog.show();
     }
 
 
@@ -103,7 +160,7 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     public void onSignupFailed() {
-        Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
+        Toast.makeText(getBaseContext(), "Account creation failed", Toast.LENGTH_LONG).show();
 
         _signupButton.setEnabled(true);
     }
@@ -111,50 +168,33 @@ public class SignupActivity extends AppCompatActivity {
     public boolean validate() {
         boolean valid = true;
 
-        String name = _nameText.getText().toString();
-        String address = _addressText.getText().toString();
-        String email = _emailText.getText().toString();
-        String mobile = _mobileText.getText().toString();
+        String seed = _seedText.getText().toString();
+        String passphrase = _passphraseText.getText().toString();
         String password = _passwordText.getText().toString();
         String reEnterPassword = _reEnterPasswordText.getText().toString();
 
-        if (name.isEmpty() || name.length() < 3) {
-            _nameText.setError("at least 3 characters");
+        if (_seedText.getVisibility() == View.VISIBLE && seed.isEmpty()) {
+            _seedText.setError("enter valid seed words");
             valid = false;
-        } else {
-            _nameText.setError(null);
+        } else if (_seedText.getVisibility() == View.VISIBLE) {
+            wordCount = Utils.getWordCount(seed).toString();
+            List<String> strengthList = Arrays.asList("12", "15", "18", "21", "24");
+            if (!strengthList.contains(wordCount)) {
+                _seedText.setError("number of words in the seed word must be 12, 15, 18, 21 or 24.");
+                valid = false;
+            } else {
+                _seedText.setError(null);
+            }
         }
 
-        if (address.isEmpty()) {
-            _addressText.setError("Enter Valid Address");
-            valid = false;
-        } else {
-            _addressText.setError(null);
-        }
-
-
-        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailText.setError("enter a valid email address");
-            valid = false;
-        } else {
-            _emailText.setError(null);
-        }
-
-        if (mobile.isEmpty() || mobile.length()!=10) {
-            _mobileText.setError("Enter Valid Mobile Number");
-            valid = false;
-        } else {
-            _mobileText.setError(null);
-        }
-
-        if (password.isEmpty() || password.length() < 4 || password.length() > 10) {
-            _passwordText.setError("between 4 and 10 alphanumeric characters");
+        if (password.isEmpty() || password.length() < 4) {
+            _passwordText.setError(getString(R.string.password_input_error));
             valid = false;
         } else {
             _passwordText.setError(null);
         }
 
-        if (reEnterPassword.isEmpty() || reEnterPassword.length() < 4 || reEnterPassword.length() > 10 || !(reEnterPassword.equals(password))) {
+        if (reEnterPassword.isEmpty() || reEnterPassword.length() < 4 || !(reEnterPassword.equals(password))) {
             _reEnterPasswordText.setError("Password Do not match");
             valid = false;
         } else {

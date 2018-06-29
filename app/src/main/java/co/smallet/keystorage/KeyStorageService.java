@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
@@ -18,6 +19,10 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 import android.os.Process;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
 
 import co.smallet.smalletlib.GlobalConstants;
 
@@ -32,14 +37,17 @@ public class KeyStorageService extends Service {
     private MainActivity main;
     private Looper mServiceLooper;
     private ServiceHandler mServiceHandler;
-    static String publicAddress;
-
-    public static String getPublicAddress() {
-        return publicAddress;
-    }
 
     public void setPublicAddress(String address) {
-        publicAddress = address;
+
+    }
+
+    public void returnAddressToWalletService(String address) {
+        Intent i = new Intent();
+        i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
+        i.putExtra("action", GlobalConstants.SERVICE_GET_ADDRESS);
+        i.putExtra("PUBLIC_ADDRESS", address);
+        startService(i);
     }
 
     // Handler that receives messages from the thread
@@ -55,19 +63,24 @@ public class KeyStorageService extends Service {
                 Log.e("keystoreageservce", "what=" + msg.what);
                 switch(msg.what) {
                     case GlobalConstants.SERVICE_GET_ADDRESS:
-                        /*
-                        Intent walletIntent = MainActivity.buildWalletIntent("PUBLIC_ADDRESS");
-                        String address = KeyStorageService.getPublicAddress();
-                        Log.e("keystorage", "addr=" + address);
-                        walletIntent.putExtra("ADDRESS", address);
-                        sendBroadcast(walletIntent);
-                        */
+                        int hdCoinCode = msg.getData().getInt("hdCoinCode");
+                        int keyIndex = msg.getData().getInt("addressIndex");
+                        HashMap<Integer, String> publicKeys = Utils.getPublicAddressListFromPref(KeyStorageService.this, hdCoinCode);
+                        String address = publicKeys.get(keyIndex);
+                        if (address != null) {
+                            returnAddressToWalletService(address);
+                            return;
+                        }
 
-                        Intent i = new Intent();
-                        i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
-                        i.putExtra("action", GlobalConstants.SERVICE_GET_ADDRESS);
-                        i.putExtra("PUBLIC_ADDRESS", getPublicAddress());
-                        ComponentName c = startService(i);
+                        Intent i = new Intent(KeyStorageService.this, MainActivity.class);
+                        startActivity(i);
+                        if (main == null)
+                            break;
+
+                        Message msgToSend = new Message();
+                        msgToSend.what = Constants.GENERATE_ADDRESS;
+                        msgToSend.setData(msg.getData());
+                        MainActivity.mHandle.sendMessage(msgToSend);
 
                         break;
                     case GlobalConstants.SERVICE_SIGN_TX:
@@ -75,7 +88,7 @@ public class KeyStorageService extends Service {
                         startActivity(i);
                         if (main == null)
                             break;
-                        Message msgToSend = new Message();
+                        msgToSend = new Message();
                         msgToSend.what = Constants.SIGN_TX;
                         msgToSend.setData(msg.getData());
                         MainActivity.mHandle.sendMessage(msgToSend);
@@ -83,6 +96,7 @@ public class KeyStorageService extends Service {
 
                 //Thread.sleep(5000);
             } catch (Exception e) {
+                e.printStackTrace();
                 // Restore interrupt status.
                 Thread.currentThread().interrupt();
             }

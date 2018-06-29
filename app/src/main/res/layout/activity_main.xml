@@ -21,53 +21,22 @@
     <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
-        android:layout_height="385dp"
+        android:layout_height="match_parent"
         android:layout_marginTop="5dp"
         android:orientation="vertical"
         app:layout_constraintTop_toTopOf="parent"
         android:focusableInTouchMode="true"
         tools:layout_editor_absoluteX="8dp">
 
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Public Key"
-            android:textSize="24sp"
-            app:layout_constraintTop_toTopOf="@+id/linearLayout" />
-
-        <EditText
-            android:id="@+id/etSeed"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="seed"
-            android:textAlignment="center"
-            android:textColor="?attr/colorAccent"
-            android:textSize="24sp"
-            app:layout_constraintTop_toTopOf="@+id/linearLayout" />
-
-        <Button
-            android:id="@+id/btImportSeed"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Import" />
-
-        <Button
-            android:id="@+id/btGenerateNew"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Generate New" />
-
         <Spinner
             android:id="@+id/spCoins"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <WebView
-            android:id="@+id/webview"
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rvPublicKeys"
             android:layout_width="match_parent"
-            android:layout_height="1000dp"
-            android:visibility="visible" />
+            android:layout_height="match_parent" />
 
         <WebView
             android:id="@+id/webview2"
@@ -82,6 +51,7 @@
             android:visibility="invisible"
             app:layout_constraintTop_toTopOf="@+id/linearLayout" />
 
+
     </LinearLayout>
 
     <android.support.design.widget.BottomNavigationView
@@ -90,7 +60,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="0dp"
         android:layout_marginStart="0dp"
-        android:background="?android:attr/windowBackground"
+        android:background="@color/aluminum"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
