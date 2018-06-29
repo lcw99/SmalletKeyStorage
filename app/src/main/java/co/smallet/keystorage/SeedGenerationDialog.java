@@ -42,7 +42,7 @@ public class SeedGenerationDialog extends Dialog {
         coinHdCode = _coinHdCode;
         keyIndex = _keyIndex;
 
-        if (keyIndex == -1) {
+        if (keyIndex == -2) {
             startKeyGeneration(seed, passPhrase, strength, -2);
         } else if (coinList.size() == 0)
             startKeyGeneration(seed, passPhrase, strength, -1);

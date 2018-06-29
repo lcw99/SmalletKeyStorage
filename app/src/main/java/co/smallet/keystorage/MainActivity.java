@@ -347,6 +347,7 @@ public class MainActivity extends AppCompatActivity {
                         Utils.encryptMasterSeedAndSave(main, seed, "");
                     }
                     Utils.addPublicAddress(main, hdCoinCode, address, keyIndex);
+                    showPublicKeys();
                     if (returnToWallet)
                         mKeyStorageService.returnAddressToWalletService(address);
                 } catch (JSONException e) {
@@ -354,7 +355,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        dialog.show();
+        if(keyIndex != -2)
+            dialog.show();
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
