@@ -5,31 +5,33 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebViewClient;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.webkit.WebView;
-import android.widget.Toast;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.liquidplayer.service.MicroService;
@@ -46,16 +48,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
 
 import co.smallet.smalletlib.GlobalConstants;
+import jnr.x86asm.Util;
 
-public class MainActivity extends AppCompatActivity {
-    static String address = null;
-    static String privateKey;
+// note globe between process will soon hello rain bone easily potato fragile
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     static MainActivity main;
-    EditText etSeed;
     Spinner spCoins;
     HashMap<Integer, Coin> coinList = null;
 
@@ -65,10 +64,6 @@ public class MainActivity extends AppCompatActivity {
     boolean mBound = false;
     Web3j web3j = null;
 
-    private String passwordHash;
-    private String encSeed;
-    private String ivSeed;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,13 +71,32 @@ public class MainActivity extends AppCompatActivity {
 
         main = this;
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
         spCoins = (Spinner) findViewById(R.id.spCoins);
 
         web3j = Web3jFactory.build(new HttpService("https://ropsten.infura.io/du9Plyu1xJErXebTWjsn"));
 
         mTextMessage = (TextView) findViewById(R.id.message);
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         final TextView textView = (TextView) findViewById(R.id.text);
         final Button button = (Button) findViewById(R.id.button);
@@ -142,11 +156,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Intent intent = new Intent(this, LoginActivity.class);
-        //startActivity(intent);
-
         if (coinList == null)
-            generateAddress(60, -2, false);
+            generateAddress(60, -2, "", false);
         else
             showPublicKeys();
     }
@@ -163,6 +174,8 @@ public class MainActivity extends AppCompatActivity {
         // Bind to LocalService
         Intent intent = new Intent(this, KeyStorageService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+
+        showPublicKeys();
     }
 
     @Override
@@ -187,16 +200,20 @@ public class MainActivity extends AppCompatActivity {
         dialog.setTitle("Confirm Transaction");
 
         // set the custom dialog components - text, image and button
-        TextView text = (TextView) dialog.findViewById(R.id.text);
         BigDecimal val = Convert.fromWei(value, Convert.Unit.ETHER);
         BigDecimal gasPriceDec = Convert.fromWei(gasPrice, Convert.Unit.GWEI);
-        String txInfo = "to: " + to + "\n" +
-                "value: " + val.toString() + " Ether\n" +
+        String txInfo =
                 "nonce: " + nonce + "\n" +
                 "chainId: " + chainId + "\n" +
                 "gasPrice: " + gasPriceDec.toString() + " GWEI\n" +
-                "gasLimits: " + gasLimits + "\n" +
-                "data:" + dataStr;
+                "gasLimits: " + gasLimits;
+        if (dataStr.length() > 0)
+            txInfo += "\ndata:" + dataStr;
+        TextView text = (TextView) dialog.findViewById(R.id.twTo);
+        text.setText(to);
+        text = (TextView) dialog.findViewById(R.id.twValue);
+        text.setText(val.toString() + " Ether");
+        text = (TextView) dialog.findViewById(R.id.twOtherInfo);
         text.setText(txInfo);
 
         Button btReject = (Button) dialog.findViewById(R.id.btReject);
@@ -280,6 +297,7 @@ public class MainActivity extends AppCompatActivity {
             switch (msg.what) {
                 case Constants.SIGN_TX:
                     Bundle data = msg.getData();
+                    String from = data.getString("from");
                     String to = data.getString("to");
                     String value = data.getString("value");
                     int chainId = data.getInt("chainId");
@@ -287,8 +305,10 @@ public class MainActivity extends AppCompatActivity {
                     String gasPrice = data.getString("gasPrice");
                     String gasLimits = data.getString("gasLimits");
                     String dataStr = data.getString("data");
+                    Log.e("keystorage", "from=" + from + ", to=" + to);
                     if (dataStr == null)
                         dataStr = "";
+                    String privateKey = Utils.getPrivateKey(main, from);
                     main.loadEtherOfflineSigner(privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr);
                     break;
                 case Constants.RETURN_TX:
@@ -299,19 +319,22 @@ public class MainActivity extends AppCompatActivity {
                     main.startService(i);
 
                     final WebView webView = main.findViewById(R.id.webview2);
+                    webView.setWebChromeClient(null);
+                    webView.setWebViewClient(null);
                     webView.loadUrl("about:blank");
                     break;
                 case Constants.GENERATE_ADDRESS:
                     int hdCoinCode = msg.getData().getInt("hdCoinCode");
                     int index = msg.getData().getInt("addressIndex");
-                    main.generateAddress(hdCoinCode, index, true);
+                    String owner = msg.getData().getString("owner");
+                    main.generateAddress(hdCoinCode, index, owner, true);
                     break;
             }
         }
     };
 
     boolean masterSeedExist;
-    private void generateAddress(final Integer hdCoinCode, final Integer keyIndex, final boolean returnToWallet) {
+    private void generateAddress(final Integer hdCoinCode, final Integer keyIndex, final String owner, final boolean returnToWallet) {
         String masterSeed = Utils.decryptMasterSeed(main);
         masterSeedExist = false;
         if (!masterSeed.equals(""))
@@ -346,17 +369,20 @@ public class MainActivity extends AppCompatActivity {
                     if (!masterSeedExist) {
                         Utils.encryptMasterSeedAndSave(main, seed, "");
                     }
-                    Utils.addPublicAddress(main, hdCoinCode, address, keyIndex);
+                    Utils.addAddressToPref(main, hdCoinCode, address, keyIndex, privateKey, owner);
                     showPublicKeys();
-                    if (returnToWallet)
-                        mKeyStorageService.returnAddressToWalletService(address);
+                    if (returnToWallet) {
+                        String ownerAddressList = Utils.getAddressListForOwnerFromPrefEncoded(main, owner);
+                        Log.e("keystorage", "current owner address size=" + Utils.getAddressListForOwnerFromPref(main, owner).size());
+                        mKeyStorageService.returnAddressToWalletService(address, ownerAddressList);
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         });
-        if(keyIndex != -2)
-            dialog.show();
+        //if(keyIndex != -2)
+        dialog.show();
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -377,10 +403,12 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void showPublicKeys() {
+        if (coinList == null)
+            return;
         PublicKeysAdapter publicKeysAdapter = new PublicKeysAdapter(this);
         ArrayList<Integer> issuedCoins =  Utils.getIssuedCoinsFromPref(this);
         for (Integer hdCoinId : issuedCoins) {
-            HashMap<Integer, String> publicAddressList = Utils.getPublicAddressListFromPref(this, hdCoinId);
+            HashMap<Integer, String> publicAddressList = Utils.getAddressListFromPref(this, "publickey", hdCoinId);
             for (Integer keyIndex : publicAddressList.keySet()) {
                 String publicAddress = publicAddressList.get(keyIndex);
                 String coinName = coinList.get(hdCoinId).name;
@@ -394,25 +422,55 @@ public class MainActivity extends AppCompatActivity {
         rvPublicKeys.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
-            = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
-        @Override
-        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.navigation_home:
-                    mTextMessage.setText(R.string.title_home);
-                    return true;
-                case R.id.navigation_dashboard:
-                    mTextMessage.setText(R.string.title_dashboard);
-                    return true;
-                case R.id.navigation_notifications:
-                    mTextMessage.setText(R.string.title_notifications);
-                    return true;
-            }
-            return false;
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
         }
-    };
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+        if (id == R.id.nav_camera) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_send) {
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
 }

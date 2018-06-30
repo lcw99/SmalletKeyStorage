@@ -1,7 +1,6 @@
 package co.smallet.keystorage;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
@@ -12,9 +11,11 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import co.smallet.smalletlib.AddressInfo;
+import co.smallet.smalletlib.ObjectSerializer;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -27,7 +28,7 @@ public class Utils {
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                Log.d("webview", consoleMessage.message() + " -- From line "
+                Log.e("webview", consoleMessage.message() + " -- From line "
                         + consoleMessage.lineNumber() + " of "
                         + consoleMessage.sourceId());
                 return super.onConsoleMessage(consoleMessage);
@@ -47,32 +48,53 @@ public class Utils {
     }
 
     public static SharedPreferences getPref(Context c) {
-         return c.getSharedPreferences(Constants.MY_PREFS_NAME, MODE_PRIVATE);
+         return c.getSharedPreferences(Constants.PREFS_ADDRESS, MODE_PRIVATE);
     }
 
-    public static void addPublicAddress(Context c,Integer hdCoinId,  String address, Integer keyIndex) {
+    public static void addAddressToPref(Context c,Integer hdCoinId,  String address, Integer keyIndex, String privateKey, String owner) {
+        if (hdCoinId == 60)     // ETH is case insensitive
+            address = address.toLowerCase();
+
         ArrayList<Integer> issuedCoins = getIssuedCoinsFromPref(c);
         if (!issuedCoins.contains(hdCoinId))
             addIssuedCoins(c, hdCoinId);
-        HashMap<Integer, String> publicKeys = getPublicAddressListFromPref(c, hdCoinId);
-        if (publicKeys.get(address) == null)
+        HashMap<Integer, String> publicKeys = getAddressListFromPref(c, "publickey", hdCoinId);
+        ArrayList<AddressInfo> addressInfos = getAddressListForOwnerFromPref(c, owner);
+        Log.e("keystorage", "addressInfos=" + addressInfos.size());
+        byte[] encData = null;
+        byte[] iv = null;
+        if (publicKeys.get(address) == null) {
             publicKeys.put(keyIndex, address);
+            addressInfos.add(new AddressInfo(hdCoinId, keyIndex, address));
+            try {
+                EnCryptor enc = new EnCryptor();
+                encData = enc.encryptText(address, privateKey);
+                iv = enc.getIv();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         // save the task list to preference
         SharedPreferences.Editor editor = getPref(c).edit();
         try {
-            editor.putString(c.getString(R.string.hdCoinIdColon) + hdCoinId, ObjectSerializer.serialize(publicKeys));
+            editor.putString(getPrefKeyString("publickey", hdCoinId.toString()), ObjectSerializer.serialize(publicKeys));
+            editor.putString(getPrefKeyString("owner", owner), ObjectSerializer.serialize(addressInfos));
+            if (encData != null) {
+                editor.putString(getPrefKeyString("privatekeydata:", address), Base64.encodeToString(encData, Base64.DEFAULT));
+                editor.putString(getPrefKeyString("privatekeyiv:", address), Base64.encodeToString(iv, Base64.DEFAULT));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
         editor.commit();
     }
 
-    public static HashMap<Integer, String> getPublicAddressListFromPref(Context c, Integer hdCoinId) {
+    public static HashMap<Integer, String> getAddressListFromPref(Context c, String prefix, Integer hdCoinId) {
         HashMap<Integer, String> publicKeys = new HashMap<>();
         SharedPreferences prefs = getPref(c);
         try {
-            String str = prefs.getString(c.getString(R.string.hdCoinIdColon) + hdCoinId, null);
+            String str = prefs.getString(getPrefKeyString(prefix, hdCoinId.toString()), null);
             if (str != null)
                 publicKeys = (HashMap<Integer, String>) ObjectSerializer.deserialize(str);
         } catch (Exception e) {
@@ -80,6 +102,24 @@ public class Utils {
         }
         return publicKeys;
     }
+
+    public static ArrayList<AddressInfo> getAddressListForOwnerFromPref(Context c, String owner) {
+        ArrayList<AddressInfo> addressInfos = new ArrayList<>();
+        String str = getAddressListForOwnerFromPrefEncoded(c, owner);
+        try {
+            if (str != null)
+                addressInfos = (ArrayList<AddressInfo>) ObjectSerializer.deserialize(str);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return addressInfos;
+    }
+
+    public static String getAddressListForOwnerFromPrefEncoded(Context c, String owner) {
+        SharedPreferences prefs = getPref(c);
+        return prefs.getString(getPrefKeyString("owner", owner), null);
+    }
+
 
     public static void addIssuedCoins(Context c,Integer hdCoinId) {
         ArrayList<Integer> issuedCoins = getIssuedCoinsFromPref(c);
@@ -113,12 +153,16 @@ public class Utils {
     }
 
     public static String decryptMasterSeed(Context c) {
-        String encSeed = Utils.getPref(c).getString(c.getString(R.string.encSeed), "");
-        String ivSeed = Utils.getPref(c).getString(c.getString(R.string.ivSeed), "");
+        return decryptData(c, c.getString(R.string.master_seed), c.getString(R.string.encSeed), c.getString(R.string.ivSeed));
+    }
+
+    private static String decryptData(Context c, String alias, String dataKey, String ivKey) {
+        String encData = Utils.getPref(c).getString(dataKey, "");
+        String iv = Utils.getPref(c).getString(ivKey, "");
         try {
             DeCryptor dec = new DeCryptor();
-            String masterSeed = dec.decryptData(c.getString(R.string.master_seed), Base64.decode(encSeed, Base64.DEFAULT), Base64.decode(ivSeed, Base64.DEFAULT));
-            return masterSeed;
+            String retVal = dec.decryptData(alias, Base64.decode(encData, Base64.DEFAULT), Base64.decode(iv, Base64.DEFAULT));
+            return retVal;
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -136,23 +180,25 @@ public class Utils {
             e.printStackTrace();
         }
         if (encSeed != null) {
-            SharedPreferences prefs = c.getSharedPreferences(Constants.MY_PREFS_NAME, MODE_PRIVATE);
+            SharedPreferences prefs = c.getSharedPreferences(Constants.PREFS_ADDRESS, MODE_PRIVATE);
             SharedPreferences.Editor editor  = prefs.edit();
+            editor.clear();     // mater seed changed, delete all prefs
             try {
                 editor.putString(c.getString(R.string.encSeed), Base64.encodeToString(encSeed, Base64.DEFAULT));
                 editor.putString(c.getString(R.string.ivSeed), Base64.encodeToString(iv, Base64.DEFAULT));
-                ArrayList<Integer> issuedCoins = getIssuedCoinsFromPref(c);
-                if (issuedCoins.size() > 0) {
-                    for (Integer hdCoinId : issuedCoins) {
-                        editor.remove(c.getString(R.string.hdCoinIdColon) + hdCoinId);
-                    }
-                    editor.remove(c.getString(R.string.issuedCoins));
-                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
             editor.commit();
         }
+    }
+
+    private static String getPrefKeyString(String prefix, String data) {
+        return prefix + data;
+    }
+
+    public static String getPrivateKey(Context c, String address) {
+        return decryptData(c, address, getPrefKeyString("privatekeydata:", address), getPrefKeyString("privatekeyiv:", address));
     }
 }

@@ -107212,6 +107212,7 @@ window.Entropy = new (function() {
         DOM.feedback
             .text("Calculating...")
             .show();
+        window.JSInterface.walletAddressReady("info=Calculating...");   //lcw
     }
 
     function findNearestWord(word) {

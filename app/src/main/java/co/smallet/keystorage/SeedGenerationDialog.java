@@ -1,15 +1,19 @@
 package co.smallet.keystorage;
 
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,6 +35,16 @@ public class SeedGenerationDialog extends Dialog {
 
     public interface ReturnValueEvent {
         void onReturnValue(String value, HashMap<Integer, Coin> _coinList);
+    }
+
+    private void returnToParent(String retVal) {
+        if (webViewBIP39 != null) {
+            webViewBIP39.setWebViewClient(null);
+            webViewBIP39.setWebChromeClient(null);
+            webViewBIP39.loadUrl("about:blank");
+        }
+        mReturnValue.onReturnValue(retVal, coinList);
+        SeedGenerationDialog.this.dismiss();
     }
 
     public SeedGenerationDialog(@NonNull Context context, String seed, String passPhrase, String strength, Integer _coinHdCode, Integer _keyIndex, ReturnValueEvent event) {
@@ -71,6 +85,7 @@ public class SeedGenerationDialog extends Dialog {
         webViewBIP39.setWebViewClient(new WebViewClient() {
             public void onPageFinished(WebView view, String url) {
                 if (coinIndex == -1 || coinIndex == -2) {
+                    Log.e("keystorage", "call webview=" + "getNetworkList();" + ", coinIndex=" + coinIndex);
                     webViewBIP39.evaluateJavascript("getNetworkList();", new ValueCallback<String>() {
                         @Override
                         public void onReceiveValue(String networkListStr) {
@@ -84,9 +99,9 @@ public class SeedGenerationDialog extends Dialog {
                                 }
                                 if (coinIndex != -2) {
                                     int _coinIndex = coinList.get(coinHdCode).optionsIndex;
-                                    startKeyGeneration(seed, passPhrase, strength, _coinIndex);
+                                    loadKeyGenerator(context, seed, passPhrase, strength, _coinIndex);
                                 } else {
-                                    mReturnValue.onReturnValue("", coinList);
+                                    returnToParent("");
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -123,14 +138,25 @@ public class SeedGenerationDialog extends Dialog {
         public void walletAddressReady(final String ready) {
             Log.e("webview", "wallet ready = " + ready);
 
+            final TextView twInfo = findViewById(R.id.twInfo);
             if (ready.startsWith("error")) {
                 if (ready.startsWith("error=Invalid root key"))
                     return;
+
                 mWebView.post(new Runnable() {
                     @Override
                     public void run() {
-                        mReturnValue.onReturnValue(ready, coinList);
-                        SeedGenerationDialog.this.dismiss();
+                        returnToParent(ready);
+                        twInfo.setText("error: " + ready.substring(ready.indexOf('=') + 1));
+                    }
+                });
+                return;
+            }
+            if (ready.startsWith("info")) {
+                mWebView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        twInfo.setText(ready.substring(ready.indexOf('=') + 1));
                     }
                 });
                 return;
@@ -142,8 +168,7 @@ public class SeedGenerationDialog extends Dialog {
                         @Override
                         public void onReceiveValue(String data) {
                             Log.e("keystorage", "data=" + data);
-                            mReturnValue.onReturnValue(data, coinList);
-                            SeedGenerationDialog.this.dismiss();
+                            returnToParent(data);
                         }
                     });
                 }

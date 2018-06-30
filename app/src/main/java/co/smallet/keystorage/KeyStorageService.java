@@ -1,12 +1,10 @@
 package co.smallet.keystorage;
 
-import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
@@ -15,14 +13,11 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 import android.os.Process;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
 
 import co.smallet.smalletlib.GlobalConstants;
 
@@ -42,11 +37,12 @@ public class KeyStorageService extends Service {
 
     }
 
-    public void returnAddressToWalletService(String address) {
+    public void returnAddressToWalletService(String address, String ownerAddressList) {
         Intent i = new Intent();
         i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
         i.putExtra("action", GlobalConstants.SERVICE_GET_ADDRESS);
         i.putExtra("PUBLIC_ADDRESS", address);
+        i.putExtra("PUBLIC_ADDRESS_LIST", ownerAddressList);
         startService(i);
     }
 
@@ -65,10 +61,12 @@ public class KeyStorageService extends Service {
                     case GlobalConstants.SERVICE_GET_ADDRESS:
                         int hdCoinCode = msg.getData().getInt("hdCoinCode");
                         int keyIndex = msg.getData().getInt("addressIndex");
-                        HashMap<Integer, String> publicKeys = Utils.getPublicAddressListFromPref(KeyStorageService.this, hdCoinCode);
+                        String owner = msg.getData().getString("owner");
+                        HashMap<Integer, String> publicKeys = Utils.getAddressListFromPref(KeyStorageService.this, "publickey", hdCoinCode);
                         String address = publicKeys.get(keyIndex);
+                        String ownerAdressList = Utils.getAddressListForOwnerFromPrefEncoded(KeyStorageService.this, owner);
                         if (address != null) {
-                            returnAddressToWalletService(address);
+                            returnAddressToWalletService(address, ownerAdressList);
                             return;
                         }
 

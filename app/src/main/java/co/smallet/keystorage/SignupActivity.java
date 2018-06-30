@@ -91,7 +91,7 @@ public class SignupActivity extends AppCompatActivity {
         if (_signupButton.getText().equals(getResources().getString(R.string.done_seed_backup)) ||
                 _signupButton.getText().equals("Login")) {
             final String passwordHash = Hashing.sha256().hashString(password, Charset.defaultCharset()).toString();
-            SharedPreferences.Editor editor = getSharedPreferences(Constants.MY_PREFS_NAME, MODE_PRIVATE).edit();
+            SharedPreferences.Editor editor = getSharedPreferences(Constants.PREFS_ADDRESS, MODE_PRIVATE).edit();
             editor.putString(getString(R.string.passwordHash), passwordHash);
             editor.commit();
 

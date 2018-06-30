@@ -1,4 +1,4 @@
-package co.smallet.keystorage;
+package co.smallet.smalletlib;
 
 
 /*
