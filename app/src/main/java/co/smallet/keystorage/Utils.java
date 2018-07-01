@@ -3,6 +3,8 @@ package co.smallet.keystorage;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.os.Message;
 import android.util.Base64;
 import android.util.Log;
 import android.webkit.ConsoleMessage;
@@ -31,6 +33,15 @@ public class Utils {
                 Log.e("webview", consoleMessage.message() + " -- From line "
                         + consoleMessage.lineNumber() + " of "
                         + consoleMessage.sourceId());
+                String consoleMsg = consoleMessage.message();
+                if (consoleMsg.toLowerCase().contains("error")) {
+                    Message msg = new Message();
+                    msg.what = Constants.TOAST_MESSAGE;
+                    Bundle data = new Bundle();
+                    data.putString("message", consoleMsg + "(" + consoleMessage.lineNumber() + ")");
+                    msg.setData(data);
+                    MainActivity.mHandle.sendMessage(msg);
+                }
                 return super.onConsoleMessage(consoleMessage);
             }
         });
@@ -52,8 +63,9 @@ public class Utils {
     }
 
     public static void addAddressToPref(Context c,Integer hdCoinId,  String address, Integer keyIndex, String privateKey, String owner) {
+        String addressForKey = address;
         if (hdCoinId == 60)     // ETH is case insensitive
-            address = address.toLowerCase();
+            addressForKey = address.toLowerCase();
 
         ArrayList<Integer> issuedCoins = getIssuedCoinsFromPref(c);
         if (!issuedCoins.contains(hdCoinId))
@@ -63,12 +75,13 @@ public class Utils {
         Log.e("keystorage", "addressInfos=" + addressInfos.size());
         byte[] encData = null;
         byte[] iv = null;
-        if (publicKeys.get(address) == null) {
+        SharedPreferences prefs = getPref(c);
+        if (prefs.getString(getPrefKeyString("privatekeydata:", addressForKey), null) == null) {
             publicKeys.put(keyIndex, address);
             addressInfos.add(new AddressInfo(hdCoinId, keyIndex, address));
             try {
                 EnCryptor enc = new EnCryptor();
-                encData = enc.encryptText(address, privateKey);
+                encData = enc.encryptText(addressForKey, privateKey);
                 iv = enc.getIv();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -81,8 +94,8 @@ public class Utils {
             editor.putString(getPrefKeyString("publickey", hdCoinId.toString()), ObjectSerializer.serialize(publicKeys));
             editor.putString(getPrefKeyString("owner", owner), ObjectSerializer.serialize(addressInfos));
             if (encData != null) {
-                editor.putString(getPrefKeyString("privatekeydata:", address), Base64.encodeToString(encData, Base64.DEFAULT));
-                editor.putString(getPrefKeyString("privatekeyiv:", address), Base64.encodeToString(iv, Base64.DEFAULT));
+                editor.putString(getPrefKeyString("privatekeydata:", addressForKey), Base64.encodeToString(encData, Base64.DEFAULT));
+                editor.putString(getPrefKeyString("privatekeyiv:", addressForKey), Base64.encodeToString(iv, Base64.DEFAULT));
             }
         } catch (IOException e) {
             e.printStackTrace();

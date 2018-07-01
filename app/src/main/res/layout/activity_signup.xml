@@ -30,6 +30,7 @@
                 android:id="@+id/input_seed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="note globe between process will soon hello rain bone easily potato fragile"
                 android:hint="Seed"
                 android:lines="3"
                 android:minLines="3"

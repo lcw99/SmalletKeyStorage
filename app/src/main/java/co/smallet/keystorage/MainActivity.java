@@ -31,6 +31,7 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -295,6 +296,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
+                case Constants.TOAST_MESSAGE:
+                    String message = msg.getData().getString("message");
+                    Toast.makeText(main, message, Toast.LENGTH_LONG).show();
+                    break;
+
                 case Constants.SIGN_TX:
                     Bundle data = msg.getData();
                     String from = data.getString("from");
@@ -312,11 +318,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     main.loadEtherOfflineSigner(privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr);
                     break;
                 case Constants.RETURN_TX:
-                    Intent i = new Intent();
-                    i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
-                    i.putExtra("action", GlobalConstants.SERVICE_SIGN_TX);
-                    i.putExtras(msg.getData());
-                    main.startService(i);
+                    main.mKeyStorageService.returnRawTxToWalletService(msg.getData());
 
                     final WebView webView = main.findViewById(R.id.webview2);
                     webView.setWebChromeClient(null);

@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -33,18 +34,30 @@ public class KeyStorageService extends Service {
     private Looper mServiceLooper;
     private ServiceHandler mServiceHandler;
 
-    public void setPublicAddress(String address) {
-
-    }
+    private String currentCallPackage;
+    private String currentCallClass;
 
     public void returnAddressToWalletService(String address, String ownerAddressList) {
+        returnAddressToWalletService(currentCallPackage, currentCallClass, address, ownerAddressList);
+    }
+
+    public void returnAddressToWalletService(String callPackage, String callClass, String address, String ownerAddressList) {
         Intent i = new Intent();
-        i.setComponent(new ComponentName("co.smallet.wallet", "co.smallet.wallet.WalletService"));
+        i.setComponent(new ComponentName(callPackage, callClass));
         i.putExtra("action", GlobalConstants.SERVICE_GET_ADDRESS);
         i.putExtra("PUBLIC_ADDRESS", address);
         i.putExtra("PUBLIC_ADDRESS_LIST", ownerAddressList);
         startService(i);
     }
+
+    public void returnRawTxToWalletService(Bundle data) {
+        Intent i = new Intent();
+        i.setComponent(new ComponentName(currentCallPackage, currentCallClass));
+        i.putExtra("action", GlobalConstants.SERVICE_SIGN_TX);
+        i.putExtras(data);
+        startService(i);
+    }
+
 
     // Handler that receives messages from the thread
     private final class ServiceHandler extends Handler {
@@ -53,22 +66,25 @@ public class KeyStorageService extends Service {
         }
         @Override
         public void handleMessage(Message msg) {
-            // Normally we would do some work here, like download a file.
-            // For our sample, we just sleep for 5 seconds.
             try {
-                Log.e("keystoreageservce", "what=" + msg.what);
+                Log.e("keystorageservice", "what=" + msg.what);
                 switch(msg.what) {
                     case GlobalConstants.SERVICE_GET_ADDRESS:
                         int hdCoinCode = msg.getData().getInt("hdCoinCode");
                         int keyIndex = msg.getData().getInt("addressIndex");
                         String owner = msg.getData().getString("owner");
+                        String callPackage = msg.getData().getString("callerPackage");
+                        String callClass = msg.getData().getString("callerClass");
                         HashMap<Integer, String> publicKeys = Utils.getAddressListFromPref(KeyStorageService.this, "publickey", hdCoinCode);
                         String address = publicKeys.get(keyIndex);
-                        String ownerAdressList = Utils.getAddressListForOwnerFromPrefEncoded(KeyStorageService.this, owner);
+                        String ownerAddressList = Utils.getAddressListForOwnerFromPrefEncoded(KeyStorageService.this, owner);
                         if (address != null) {
-                            returnAddressToWalletService(address, ownerAdressList);
+                            returnAddressToWalletService(callPackage, callClass, address, ownerAddressList);
                             return;
                         }
+
+                        currentCallPackage = callPackage;
+                        currentCallClass = callClass;
 
                         Intent i = new Intent(KeyStorageService.this, MainActivity.class);
                         startActivity(i);
@@ -82,6 +98,9 @@ public class KeyStorageService extends Service {
 
                         break;
                     case GlobalConstants.SERVICE_SIGN_TX:
+                        currentCallPackage = msg.getData().getString("callerPackage");
+                        currentCallClass = msg.getData().getString("callerClass");
+
                         i = new Intent(KeyStorageService.this, MainActivity.class);
                         startActivity(i);
                         if (main == null)
