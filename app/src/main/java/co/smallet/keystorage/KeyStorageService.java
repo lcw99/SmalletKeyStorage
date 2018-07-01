@@ -1,6 +1,7 @@
 package co.smallet.keystorage;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
@@ -34,8 +35,8 @@ public class KeyStorageService extends Service {
     private Looper mServiceLooper;
     private ServiceHandler mServiceHandler;
 
-    private String currentCallPackage;
-    private String currentCallClass;
+    private static String currentCallPackage;       // should be static, don't know why....
+    private static String currentCallClass;         // should be static, don't know why....
 
     public void returnAddressToWalletService(String address, String ownerAddressList) {
         returnAddressToWalletService(currentCallPackage, currentCallClass, address, ownerAddressList);
@@ -67,7 +68,7 @@ public class KeyStorageService extends Service {
         @Override
         public void handleMessage(Message msg) {
             try {
-                Log.e("keystorageservice", "what=" + msg.what);
+                Log.e("keystorageservice", "service handler what======" + msg.what);
                 switch(msg.what) {
                     case GlobalConstants.SERVICE_GET_ADDRESS:
                         int hdCoinCode = msg.getData().getInt("hdCoinCode");
@@ -88,27 +89,53 @@ public class KeyStorageService extends Service {
 
                         Intent i = new Intent(KeyStorageService.this, MainActivity.class);
                         startActivity(i);
-                        if (main == null)
-                            break;
 
                         Message msgToSend = new Message();
                         msgToSend.what = Constants.GENERATE_ADDRESS;
                         msgToSend.setData(msg.getData());
-                        MainActivity.mHandle.sendMessage(msgToSend);
 
+                        if (MainActivity.main == null || !MainActivity.main.getWindow().getDecorView().getRootView().isShown()) {
+                            msgToSend.what = Constants.WAIT_MAIN_OPEN;
+                            msgToSend.arg1 = Constants.GENERATE_ADDRESS;
+                            sendMessageDelayed(msgToSend, 1000);
+                        } else {
+                            MainActivity.mHandle.sendMessage(msgToSend);
+                        }
                         break;
                     case GlobalConstants.SERVICE_SIGN_TX:
+                        Log.e("keystorageservice", "SERVICE_SIGN_TX");
                         currentCallPackage = msg.getData().getString("callerPackage");
                         currentCallClass = msg.getData().getString("callerClass");
 
                         i = new Intent(KeyStorageService.this, MainActivity.class);
                         startActivity(i);
-                        if (main == null)
-                            break;
+
                         msgToSend = new Message();
                         msgToSend.what = Constants.SIGN_TX;
                         msgToSend.setData(msg.getData());
-                        MainActivity.mHandle.sendMessage(msgToSend);
+                        if (MainActivity.main == null || !MainActivity.main.getWindow().getDecorView().getRootView().isShown()) {
+                            msgToSend.what = Constants.WAIT_MAIN_OPEN;
+                            msgToSend.arg1 = Constants.SIGN_TX;
+                            sendMessageDelayed(msgToSend, 1000);
+                        } else {
+                            MainActivity.mHandle.sendMessage(msgToSend);
+                        }
+                        break;
+                    case Constants.WAIT_MAIN_OPEN:
+                        Log.e("keystorageservice", "waiting... main... alive=" + currentCallClass);
+                        if (MainActivity.main == null || !MainActivity.main.getWindow().getDecorView().getRootView().isShown()) {
+                            Message msgNew = new Message();
+                            msgNew.what = msg.what;
+                            msgNew.arg1 = msg.arg1;
+                            msgNew.setData(msg.getData());
+                            sendMessageDelayed(msgNew, 1000);
+                        } else {
+                            Message msgNew = new Message();
+                            msgNew.what = msg.arg1;
+                            msgNew.setData(msg.getData());
+                            MainActivity.mHandle.sendMessageDelayed(msgNew, 1000);
+                        }
+                        break;
                 }
 
                 //Thread.sleep(5000);
@@ -164,6 +191,7 @@ public class KeyStorageService extends Service {
     @Override
     public void onDestroy() {
         isServiceRunning = false;
+        main = null;
         Toast.makeText(this, "KeyStorage  service done", Toast.LENGTH_SHORT).show();
     }
 
@@ -187,20 +215,21 @@ public class KeyStorageService extends Service {
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
-        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_stat_key_storage);
+        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_stat_key_storage_vec);
 
         Notification notification = new Notification.Builder(this)
-                .setContentTitle(getResources().getString(R.string.app_name))
-                .setTicker(getResources().getString(R.string.app_name))
-                .setContentText(getResources().getString(R.string.app_name))
-                .setSmallIcon(R.drawable.ic_stat_key_storage)
+                .setContentTitle("Your keys")
+                .setContentText("Safely stored Here.")
+                .setSmallIcon(R.drawable.ic_stat_key_storage_vec)
                 .setLargeIcon(icon)
                 .setContentIntent(contentPendingIntent)
-                .setOngoing(true)
-//                .setDeleteIntent(contentPendingIntent)  // if needed
+                .setAutoCancel(true)
+                .setOngoing(false)
+                //.setDeleteIntent(contentPendingIntent)  // if needed
                 .build();
-        notification.flags = notification.flags | Notification.FLAG_NO_CLEAR;     // NO_CLEAR makes the notification stay when the user performs a "delete all" command
+        //notification.flags = notification.flags | Notification.FLAG_NO_CLEAR;     // NO_CLEAR makes the notification stay when the user performs a "delete all" command
         startForeground(NOTIFICATION_ID, notification);
+        //((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).notify(NOTIFICATION_ID, notification);
     }
 
     void stopMyService() {

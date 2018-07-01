@@ -38,6 +38,7 @@
         <service
             android:name=".KeyStorageService"
             android:exported="true"
+            android:launchMode="singleInstance"
             android:permission="co.smallet.keystorage.permission.SMALLET" />
 
     </application>

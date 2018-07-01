@@ -55,7 +55,7 @@ import jnr.x86asm.Util;
 
 // note globe between process will soon hello rain bone easily potato fragile
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
-    static MainActivity main;
+    public static MainActivity main;
     Spinner spCoins;
     HashMap<Integer, Coin> coinList = null;
 
@@ -177,6 +177,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
         showPublicKeys();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
     @Override
