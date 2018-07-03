@@ -39,6 +39,7 @@ public class SignupActivity extends AppCompatActivity {
     @BindView(R.id.btn_signup) Button _signupButton;
     @BindView(R.id.link_login) TextView _loginLink;
     @BindView(R.id.text_backup_seed) TextView _backupSeedInfo;
+    @BindView(R.id.current_seed) TextView _currentSeed;
 
     String password;
     String seedGenerated = "";
@@ -84,18 +85,21 @@ public class SignupActivity extends AppCompatActivity {
                 }
             }
         });
+
+        if (Utils.isMasterKeyExist(this)) {
+            _currentSeed.setText(Utils.decryptMasterSeed(this));
+        }
     }
 
     public void signup() {
         Log.d(TAG, "Signup");
-        if (_signupButton.getText().equals(getResources().getString(R.string.done_seed_backup)) ||
-                _signupButton.getText().equals("Login")) {
+        if (_signupButton.getText().equals(getResources().getString(R.string.done_seed_backup)) || _signupButton.getText().equals("Login")) {
+            Utils.encryptMasterSeedAndSave(this, seedGenerated, passphrase);
+
             final String passwordHash = Hashing.sha256().hashString(password, Charset.defaultCharset()).toString();
-            SharedPreferences.Editor editor = getSharedPreferences(Constants.PREFS_ADDRESS, MODE_PRIVATE).edit();
+            SharedPreferences.Editor editor = Utils.getPref(this).edit();
             editor.putString(getString(R.string.passwordHash), passwordHash);
             editor.commit();
-
-            Utils.encryptMasterSeedAndSave(this, seedGenerated, passphrase);
 
             finish();
             return;
@@ -152,12 +156,6 @@ public class SignupActivity extends AppCompatActivity {
         dialog.show();
     }
 
-
-    public void onSignupSuccess() {
-        _signupButton.setEnabled(true);
-        setResult(RESULT_OK, null);
-        finish();
-    }
 
     public void onSignupFailed() {
         Toast.makeText(getBaseContext(), "Account creation failed", Toast.LENGTH_LONG).show();

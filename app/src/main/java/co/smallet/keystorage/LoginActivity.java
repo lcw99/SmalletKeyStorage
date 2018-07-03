@@ -66,14 +66,16 @@ public class LoginActivity extends AppCompatActivity {
 
         String password = _passwordText.getText().toString();
         final String passwordHashInput = Hashing.sha256().hashString(password, Charset.defaultCharset()).toString();
-        SharedPreferences pref = getSharedPreferences(Constants.PREFS_ADDRESS, MODE_PRIVATE);
-        String passwordHashSaved = pref.getString(getResources().getString(R.string.passwordHash), "");
+        String passwordHashSaved = Utils.getPref(this).getString(getString(R.string.passwordHash), "");
         if (!passwordHashInput.equals(passwordHashSaved)) {
             onLoginFailed();
             return;
         }
 
         finish();
+
+        Intent intent = new Intent(getApplicationContext(), SignupActivity.class);
+        startActivity(intent);
     }
 
 

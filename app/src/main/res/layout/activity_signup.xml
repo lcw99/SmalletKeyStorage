@@ -19,6 +19,18 @@
             android:layout_marginBottom="24dp"
             android:layout_gravity="center_horizontal" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Current Master Seed"
+            android:textSize="12sp"/>
+        <TextView android:id="@+id/current_seed"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="current seed"
+            android:visibility="gone"
+            android:textSize="16dip"/>
+
         <!-- Name Label -->
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
@@ -30,8 +42,8 @@
                 android:id="@+id/input_seed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="note globe between process will soon hello rain bone easily potato fragile"
-                android:hint="Seed"
+                android:text=""
+                android:hint="Master Seed"
                 android:lines="3"
                 android:minLines="3"
                 android:visibility="gone"
@@ -102,14 +114,15 @@
             android:layout_marginTop="10dp"
             android:layout_marginBottom="24dp"
             android:padding="12dp"
-            android:text="Create Account"/>
+            android:text="Generate Master Seed"/>
 
         <TextView android:id="@+id/link_login"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:text="Already a member? Login"
+            android:text="Already have a seed? Login"
             android:gravity="center"
+            android:visibility="gone"
             android:textSize="16dip"/>
 
 

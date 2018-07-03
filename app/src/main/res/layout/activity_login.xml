@@ -44,8 +44,9 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:text="No account yet? Create one"
+            android:text="No MASTER SEED yet? Create one"
             android:gravity="center"
+            android:visibility="gone"
             android:textSize="16dip"/>
 
     </LinearLayout>

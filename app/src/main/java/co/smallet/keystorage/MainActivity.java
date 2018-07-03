@@ -157,9 +157,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        if (coinList == null)
-            generateAddress(60, -2, "", false);
-        else
+        if (coinList == null) {
+            if (!Utils.isMasterKeyExist(this)) {
+                Intent i = new Intent(this, SignupActivity.class);
+                startActivity(i);
+            } else {
+                generateAddress(60, -2, "", false);
+            }
+        } else
             showPublicKeys();
     }
 
@@ -381,7 +386,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (returnToWallet) {
                         String ownerAddressList = Utils.getAddressListForOwnerFromPrefEncoded(main, owner);
                         Log.e("keystorage", "current owner address size=" + Utils.getAddressListForOwnerFromPref(main, owner).size());
-                        mKeyStorageService.returnAddressToWalletService(address, ownerAddressList);
+                        mKeyStorageService.returnAddressToWalletService(address, ownerAddressList, true);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -466,14 +471,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_master_seed) {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
-        } else if (id == R.id.nav_gallery) {
-        } else if (id == R.id.nav_slideshow) {
-        } else if (id == R.id.nav_manage) {
         } else if (id == R.id.nav_share) {
         } else if (id == R.id.nav_send) {
+            Utils.getPref(this).edit().clear().commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

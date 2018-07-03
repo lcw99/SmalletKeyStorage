@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Message;
+import android.support.v4.widget.ContentLoadingProgressBar;
 import android.util.Base64;
 import android.util.Log;
 import android.webkit.ConsoleMessage;
@@ -169,6 +170,14 @@ public class Utils {
         return decryptData(c, c.getString(R.string.master_seed), c.getString(R.string.encSeed), c.getString(R.string.ivSeed));
     }
 
+    public static boolean isMasterKeyExist(Context c) {
+        String encData = Utils.getPref(c).getString(c.getString(R.string.encSeed), null);
+        if (encData != null)
+            return true;
+        else
+            return false;
+    }
+
     private static String decryptData(Context c, String alias, String dataKey, String ivKey) {
         String encData = Utils.getPref(c).getString(dataKey, "");
         String iv = Utils.getPref(c).getString(ivKey, "");
@@ -193,9 +202,9 @@ public class Utils {
             e.printStackTrace();
         }
         if (encSeed != null) {
-            SharedPreferences prefs = c.getSharedPreferences(Constants.PREFS_ADDRESS, MODE_PRIVATE);
+            SharedPreferences prefs = getPref(c);
             SharedPreferences.Editor editor  = prefs.edit();
-            editor.clear();     // mater seed changed, delete all prefs
+            editor.clear();     // mater seed changed, delete all prefs except login password
             try {
                 editor.putString(c.getString(R.string.encSeed), Base64.encodeToString(encSeed, Base64.DEFAULT));
                 editor.putString(c.getString(R.string.ivSeed), Base64.encodeToString(iv, Base64.DEFAULT));

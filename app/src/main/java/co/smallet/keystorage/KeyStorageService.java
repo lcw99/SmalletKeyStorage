@@ -22,6 +22,7 @@ import android.os.Process;
 import java.util.HashMap;
 
 import co.smallet.smalletlib.GlobalConstants;
+import jnr.x86asm.Util;
 
 
 public class KeyStorageService extends Service {
@@ -38,16 +39,17 @@ public class KeyStorageService extends Service {
     private static String currentCallPackage;       // should be static, don't know why....
     private static String currentCallClass;         // should be static, don't know why....
 
-    public void returnAddressToWalletService(String address, String ownerAddressList) {
-        returnAddressToWalletService(currentCallPackage, currentCallClass, address, ownerAddressList);
+    public void returnAddressToWalletService(String address, String ownerAddressList, boolean isAddressCreated) {
+        returnAddressToWalletService(currentCallPackage, currentCallClass, address, ownerAddressList, isAddressCreated);
     }
 
-    public void returnAddressToWalletService(String callPackage, String callClass, String address, String ownerAddressList) {
+    public void returnAddressToWalletService(String callPackage, String callClass, String address, String ownerAddressList, boolean isAddressCreated) {
         Intent i = new Intent();
         i.setComponent(new ComponentName(callPackage, callClass));
         i.putExtra("action", GlobalConstants.SERVICE_GET_ADDRESS);
         i.putExtra("PUBLIC_ADDRESS", address);
         i.putExtra("PUBLIC_ADDRESS_LIST", ownerAddressList);
+        i.putExtra("IS_CREATED", isAddressCreated);
         startService(i);
     }
 
@@ -80,7 +82,12 @@ public class KeyStorageService extends Service {
                         String address = publicKeys.get(keyIndex);
                         String ownerAddressList = Utils.getAddressListForOwnerFromPrefEncoded(KeyStorageService.this, owner);
                         if (address != null) {
-                            returnAddressToWalletService(callPackage, callClass, address, ownerAddressList);
+                            returnAddressToWalletService(callPackage, callClass, address, ownerAddressList, false);
+                            return;
+                        }
+
+                        if (!Utils.isMasterKeyExist(KeyStorageService.this)) {
+                            returnAddressToWalletService(callPackage, callClass, null, null, false);
                             return;
                         }
 
