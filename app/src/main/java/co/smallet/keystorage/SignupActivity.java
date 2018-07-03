@@ -1,8 +1,10 @@
 package co.smallet.keystorage;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
@@ -11,6 +13,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +43,7 @@ public class SignupActivity extends AppCompatActivity {
     @BindView(R.id.link_login) TextView _loginLink;
     @BindView(R.id.text_backup_seed) TextView _backupSeedInfo;
     @BindView(R.id.current_seed) TextView _currentSeed;
+    @BindView(R.id.llCurrentSeed) LinearLayout llCurrentSeed;
 
     String password;
     String seedGenerated = "";
@@ -74,10 +78,11 @@ public class SignupActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
                 if (isChecked) {
+                    llCurrentSeed.setVisibility(View.GONE);
                     _seedText.setVisibility(View.VISIBLE);
                     _passphraseText.setVisibility(View.VISIBLE);
                     _seedText.requestFocus();
-                    _signupButton.setText("Import Seed");
+                    _signupButton.setText(R.string.import_seed);
                 } else {
                     _seedText.setVisibility(View.GONE);
                     _passphraseText.setVisibility(View.GONE);
@@ -88,6 +93,7 @@ public class SignupActivity extends AppCompatActivity {
 
         if (Utils.isMasterKeyExist(this)) {
             _currentSeed.setText(Utils.decryptMasterSeed(this));
+            llCurrentSeed.setVisibility(View.VISIBLE);
         }
     }
 
@@ -112,6 +118,31 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        String title = "NEW Master Seed";
+        String msg = "Generating NEW master seed means, delete all current Keys and wallet address in the vault. You should bakcup current Master Seed.\n\nOK to proceed.";
+        if (_signupButton.getText().equals(getResources().getString(R.string.import_seed))) {
+            title = "Importing Master Seed";
+            msg = "Importing MASTER SEED means, delete all current Keys and wallet address in the vault. You should bakcup current Master Seed.\n\nOK to proceed.";
+        }
+        builder.setTitle(title)
+                .setMessage(msg)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                llCurrentSeed.setVisibility(View.GONE);
+                                generateMasterSeed();
+                            }
+                        })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                    }
+                })
+                .show();
+    }
+
+    private void generateMasterSeed() {
         final String seedText = _seedText.getText().toString();
         passphrase = _passphraseText.getText().toString();
         SeedGenerationDialog dialog = new SeedGenerationDialog(this, seedText, passphrase, wordCount, 60, 0,  new SeedGenerationDialog.ReturnValueEvent() {

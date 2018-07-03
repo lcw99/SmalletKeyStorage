@@ -30,7 +30,8 @@
         <activity
             android:name=".SignupActivity"
             android:exported="true"
-            android:theme="@style/AppTheme.Dark" />
+            android:theme="@style/AppTheme.Dark"
+            android:permission="co.smallet.keystorage.permission.SMALLET" />
 
         <service
             android:name=".KeyStorageService"
