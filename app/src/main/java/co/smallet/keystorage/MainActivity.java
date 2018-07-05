@@ -1,6 +1,7 @@
 package co.smallet.keystorage;
 
 import android.app.Dialog;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -192,6 +193,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onStop() {
         super.onStop();
+        //((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).cancel(Constants.NOTIFICATION_ID);
+        //mKeyStorageService.stopForeground(true);
     }
 
     @Override

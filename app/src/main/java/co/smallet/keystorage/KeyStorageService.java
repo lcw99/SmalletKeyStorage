@@ -1,13 +1,17 @@
 package co.smallet.keystorage;
 
+import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,9 +28,10 @@ import java.util.HashMap;
 import co.smallet.smalletlib.GlobalConstants;
 import jnr.x86asm.Util;
 
+import static android.app.NotificationManager.IMPORTANCE_HIGH;
+
 
 public class KeyStorageService extends Service {
-    static final int NOTIFICATION_ID = 543;
     public static boolean isServiceRunning = false;
 
     // Binder given to clients
@@ -224,19 +229,37 @@ public class KeyStorageService extends Service {
 
         Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_stat_key_storage_vec);
 
-        Notification notification = new Notification.Builder(this)
-                .setContentTitle("Your keys")
-                .setContentText("Safely stored Here.")
+        String CHANNEL_ONE_ID = "co.smallet.keystorage.channel1";
+        String CHANNEL_ONE_NAME = "Channel One";
+        NotificationChannel notificationChannel = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            notificationChannel = new NotificationChannel(CHANNEL_ONE_ID,
+                    CHANNEL_ONE_NAME, IMPORTANCE_HIGH);
+            notificationChannel.enableLights(true);
+            notificationChannel.setLightColor(Color.RED);
+            notificationChannel.setShowBadge(true);
+            notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            manager.createNotificationChannel(notificationChannel);
+        }
+
+        Notification.Builder builder = new Notification.Builder(this)
+                .setContentTitle("Key Vault Service")
+                .setContentText("Safely started.")
                 .setSmallIcon(R.drawable.ic_stat_key_storage_vec)
                 .setLargeIcon(icon)
                 .setContentIntent(contentPendingIntent)
-                .setAutoCancel(true)
-                .setOngoing(false)
+                .setAutoCancel(false)
+                .setOngoing(true);
                 //.setDeleteIntent(contentPendingIntent)  // if needed
-                .build();
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O)
+            builder.setChannelId(CHANNEL_ONE_ID);
+        Notification notification = builder.build();
+
         //notification.flags = notification.flags | Notification.FLAG_NO_CLEAR;     // NO_CLEAR makes the notification stay when the user performs a "delete all" command
-        startForeground(NOTIFICATION_ID, notification);
-        //((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).notify(NOTIFICATION_ID, notification);
+        startForeground(Constants.NOTIFICATION_ID, notification);
+
     }
 
     void stopMyService() {
