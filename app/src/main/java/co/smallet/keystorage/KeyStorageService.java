@@ -29,6 +29,7 @@ import co.smallet.smalletlib.GlobalConstants;
 import jnr.x86asm.Util;
 
 import static android.app.NotificationManager.IMPORTANCE_HIGH;
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 
 public class KeyStorageService extends Service {
@@ -44,11 +45,21 @@ public class KeyStorageService extends Service {
     private static String currentCallPackage;       // should be static, don't know why....
     private static String currentCallClass;         // should be static, don't know why....
 
+
+    public void returnAddressToWalletService(String callPackage, String callClass) {
+        Log.e("keystorage", "return to wallet, from activity---------------------------" + callPackage + "," + callClass);
+        Intent i = new Intent();
+        i.setComponent(new ComponentName(callPackage, callClass));
+        i.putExtra("action", GlobalConstants.SERVICE_RETURN_TO_WALLET);
+        startService(i);
+    }
+
     public void returnAddressToWalletService(String address, String ownerAddressList, boolean isAddressCreated) {
         returnAddressToWalletService(currentCallPackage, currentCallClass, address, ownerAddressList, isAddressCreated);
     }
 
     public void returnAddressToWalletService(String callPackage, String callClass, String address, String ownerAddressList, boolean isAddressCreated) {
+        Log.e("keystorage", "return to wallet--------------------------------------------");
         Intent i = new Intent();
         i.setComponent(new ComponentName(callPackage, callClass));
         i.putExtra("action", GlobalConstants.SERVICE_GET_ADDRESS);
@@ -100,6 +111,7 @@ public class KeyStorageService extends Service {
                         currentCallClass = callClass;
 
                         Intent i = new Intent(KeyStorageService.this, MainActivity.class);
+                        i.setFlags(FLAG_ACTIVITY_NEW_TASK);
                         startActivity(i);
 
                         Message msgToSend = new Message();
@@ -120,6 +132,7 @@ public class KeyStorageService extends Service {
                         currentCallClass = msg.getData().getString("callerClass");
 
                         i = new Intent(KeyStorageService.this, MainActivity.class);
+                        i.setFlags(FLAG_ACTIVITY_NEW_TASK);
                         startActivity(i);
 
                         msgToSend = new Message();
@@ -187,9 +200,11 @@ public class KeyStorageService extends Service {
         // start ID so we know which request we're stopping when we finish the job
         Message msg = mServiceHandler.obtainMessage();
         msg.arg1 = startId;
-        msg.what = intent.getIntExtra("action", 0);
-        msg.setData(intent.getExtras());
-        mServiceHandler.sendMessage(msg);
+        if (intent != null) {
+            msg.what = intent.getIntExtra("action", 0);
+            msg.setData(intent.getExtras());
+            mServiceHandler.sendMessage(msg);
+        }
 
         return START_STICKY;
     }
@@ -224,7 +239,7 @@ public class KeyStorageService extends Service {
 
         Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
         notificationIntent.setAction(Constants.ACTION_MAIN);  // A string containing the action name
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        notificationIntent.setFlags(FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
         Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_stat_key_storage_vec);
@@ -249,8 +264,8 @@ public class KeyStorageService extends Service {
                 .setSmallIcon(R.drawable.ic_stat_key_storage_vec)
                 .setLargeIcon(icon)
                 .setContentIntent(contentPendingIntent)
-                .setAutoCancel(false)
-                .setOngoing(true);
+                .setAutoCancel(true)
+                .setOngoing(false);
                 //.setDeleteIntent(contentPendingIntent)  // if needed
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O)

@@ -66,12 +66,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     boolean mBound = false;
     Web3j web3j = null;
 
+    String onStartAction;
+    String callPackage;
+    String callClass;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         main = this;
+
+        Intent intent = getIntent();
+        if (intent != null) {
+            onStartAction = intent.getAction();
+            Log.e("keystorage", "action=========================" + onStartAction);
+            if (onStartAction != null && onStartAction.equals("return_to_wallet")) {
+                callPackage = intent.getStringExtra("call_package");
+                callClass = intent.getStringExtra("call_class");
+            }
+        }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -179,8 +193,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onStart() {
         super.onStart();
         // Bind to LocalService
-        Intent intent = new Intent(this, KeyStorageService.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        Intent intentNew = new Intent(this, KeyStorageService.class);
+        bindService(intentNew, mConnection, Context.BIND_AUTO_CREATE);
 
         showPublicKeys();
     }
@@ -194,7 +208,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onStop() {
         super.onStop();
         //((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).cancel(Constants.NOTIFICATION_ID);
-        //mKeyStorageService.stopForeground(true);
     }
 
     @Override
@@ -202,6 +215,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onDestroy();
         // Unbind from the service
         if (mBound) {
+            mKeyStorageService.stopForeground(true);
             unbindService(mConnection);
             mBound = false;
         }
@@ -369,6 +383,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 coinList = _coinList;
                 if(keyIndex == -2) {
                     showPublicKeys();
+                    if (onStartAction != null && onStartAction.equals("return_to_wallet")) {
+                        mKeyStorageService.returnAddressToWalletService(callPackage, callClass);
+                    }
                     return;
                 }
                 if (data.startsWith("error")) {
@@ -386,8 +403,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                     Utils.addAddressToPref(main, hdCoinCode, address, keyIndex, privateKey, owner);
                     showPublicKeys();
+                    String ownerAddressList = Utils.getAddressListForOwnerFromPrefEncoded(main, owner);
                     if (returnToWallet) {
-                        String ownerAddressList = Utils.getAddressListForOwnerFromPrefEncoded(main, owner);
                         Log.e("keystorage", "current owner address size=" + Utils.getAddressListForOwnerFromPref(main, owner).size());
                         mKeyStorageService.returnAddressToWalletService(address, ownerAddressList, true);
                     }
