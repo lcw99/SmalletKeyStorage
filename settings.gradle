@@ -1,1 +1,1 @@
-include ':app', ':smalletlib'
+include ':app', ':smalletlib', ':smalletandroidlibrary'

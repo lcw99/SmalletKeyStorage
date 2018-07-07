@@ -45,5 +45,5 @@ dependencies {
     implementation 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
     api 'com.google.guava:guava:25.1-android'
-    implementation project(':smalletlib')
+    implementation project(':smalletandroidlibrary')
 }

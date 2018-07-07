@@ -1,11 +1,13 @@
 package co.smallet.keystorage;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -50,9 +52,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import co.smallet.smalletlib.GlobalConstants;
-import jnr.x86asm.Util;
 
 // note globe between process will soon hello rain bone easily potato fragile
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -494,9 +493,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (id == R.id.nav_master_seed) {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
+        } else if (id == R.id.nav_remove_all_account) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Remove All Account")
+                    .setMessage("Remove all account generated. You can create again from your wallet app.\n\nOK to proceed.")
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                        }
+                    })
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Utils.removeAllAccount(main);
+                            showPublicKeys();
+                        }
+                    }).show();
         } else if (id == R.id.nav_share) {
         } else if (id == R.id.nav_send) {
-            Utils.getPref(this).edit().clear().commit();
+            //Utils.getPref(this).edit().clear().commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

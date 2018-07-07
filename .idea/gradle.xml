@@ -10,6 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/SmalletLib" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/smalletandroidlibrary" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

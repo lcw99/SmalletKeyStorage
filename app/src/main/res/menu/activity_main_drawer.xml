@@ -8,6 +8,10 @@
             android:id="@+id/nav_master_seed"
             android:icon="@drawable/ic_menu_master_seed"
             android:title="Master Seed" />
+        <item
+            android:id="@+id/nav_remove_all_account"
+            android:icon="@drawable/ic_menu_remove_all_account"
+            android:title="Remove All Account" />
     </group>
 
     <item android:title="Communicate">
@@ -19,7 +23,7 @@
             <item
                 android:id="@+id/nav_send"
                 android:icon="@drawable/ic_menu_send"
-                android:title="Reset MASTER SEED" />
+                android:title="Send" />
         </menu>
     </item>
 

@@ -1,14 +1,13 @@
 package co.smallet.keystorage;
 
-import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -19,17 +18,23 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 import android.os.Process;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
-import co.smallet.smalletlib.GlobalConstants;
+import co.smallet.smalletandroidlibrary.AddressInfo;
+import co.smallet.smalletandroidlibrary.GlobalConstants;
+import co.smallet.smalletandroidlibrary.ObjectSerializer;
 import jnr.x86asm.Util;
 
 import static android.app.NotificationManager.IMPORTANCE_HIGH;
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+import static co.smallet.keystorage.Utils.getAddressListForOwnerFromPref;
 
 
 public class KeyStorageService extends Service {
@@ -97,7 +102,7 @@ public class KeyStorageService extends Service {
                         HashMap<Integer, String> publicKeys = Utils.getAddressListFromPref(KeyStorageService.this, "publickey", hdCoinCode);
                         String address = publicKeys.get(keyIndex);
                         String ownerAddressList = Utils.getAddressListForOwnerFromPrefEncoded(KeyStorageService.this, owner);
-                        if (address != null) {
+                        if (address != null && ownerAddressList != null) {
                             returnAddressToWalletService(callPackage, callClass, address, ownerAddressList, false);
                             return;
                         }

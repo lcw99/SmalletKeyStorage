@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Message;
-import android.support.v4.widget.ContentLoadingProgressBar;
+import android.preference.Preference;
 import android.util.Base64;
 import android.util.Log;
 import android.webkit.ConsoleMessage;
@@ -17,8 +17,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import co.smallet.smalletlib.AddressInfo;
-import co.smallet.smalletlib.ObjectSerializer;
+import co.smallet.smalletandroidlibrary.AddressInfo;
+import co.smallet.smalletandroidlibrary.ObjectSerializer;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -121,8 +121,9 @@ public class Utils {
         ArrayList<AddressInfo> addressInfos = new ArrayList<>();
         String str = getAddressListForOwnerFromPrefEncoded(c, owner);
         try {
-            if (str != null)
+            if (str != null) {
                 addressInfos = (ArrayList<AddressInfo>) ObjectSerializer.deserialize(str);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -131,7 +132,19 @@ public class Utils {
 
     public static String getAddressListForOwnerFromPrefEncoded(Context c, String owner) {
         SharedPreferences prefs = getPref(c);
-        return prefs.getString(getPrefKeyString("owner", owner), null);
+        String strEncoded = prefs.getString(getPrefKeyString("owner", owner), null);
+        if (strEncoded != null) {
+            try {
+                ArrayList<AddressInfo> addressInfos = (ArrayList<AddressInfo>) ObjectSerializer.deserialize(strEncoded);
+            } catch (ClassNotFoundException ex) {
+                // AddressInfo class changed
+                removeAllAccount(c);
+                strEncoded = null;
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return strEncoded;
     }
 
 
@@ -216,11 +229,24 @@ public class Utils {
         }
     }
 
-    private static String getPrefKeyString(String prefix, String data) {
+    public static String getPrefKeyString(String prefix, String data) {
         return prefix + data;
     }
 
     public static String getPrivateKey(Context c, String address) {
         return decryptData(c, address, getPrefKeyString("privatekeydata:", address), getPrefKeyString("privatekeyiv:", address));
+    }
+
+    public static void removeAllAccount(Context c) {
+        SharedPreferences pref = Utils.getPref(c);
+        String encData = pref.getString(c.getString(R.string.encSeed), "");
+        String iv = pref.getString(c.getString(R.string.ivSeed), "");
+        SharedPreferences.Editor editor = pref.edit();
+        editor.clear();
+        if (!encData.equals("")) {
+            editor.putString(c.getString(R.string.encSeed), encData);
+            editor.putString(c.getString(R.string.ivSeed), iv);
+        }
+        editor.commit();
     }
 }
