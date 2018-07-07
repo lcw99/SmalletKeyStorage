@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference
+        android:key="prefGoStore"
+        android:summary="Rating and check version"
+        android:title="Goto play store page" />
+    <Preference
+        android:key="prefCustomerSupport"
+        android:summary="Email to support team"
+        android:title="Mail to support team" />
+    <Preference
+        android:key="prefSendLog"
+        android:summary="Send log to support team"
+        android:title="Send log" />
+    <Preference
+        android:key="prefShowAppInfo"
+        android:summary="System app information"
+        android:title="App information" />
+    <Preference
+        android:key="prefVersion"
+        android:summary=""
+        android:title="Program version" />
+    <Preference
+        android:key="prefDeveloper"
+        android:summary="Smallet Networks Inc"
+        android:title="Developer" />
+</PreferenceScreen>

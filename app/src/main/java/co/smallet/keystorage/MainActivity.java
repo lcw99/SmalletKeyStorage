@@ -479,6 +479,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent intent = new Intent(main, SettingsActivity.class);
+            startActivity(intent);
             return true;
         }
 

@@ -241,11 +241,13 @@ public class Utils {
         SharedPreferences pref = Utils.getPref(c);
         String encData = pref.getString(c.getString(R.string.encSeed), "");
         String iv = pref.getString(c.getString(R.string.ivSeed), "");
+        String passwordHash = pref.getString(c.getString(R.string.passwordHash), "");
         SharedPreferences.Editor editor = pref.edit();
         editor.clear();
         if (!encData.equals("")) {
             editor.putString(c.getString(R.string.encSeed), encData);
             editor.putString(c.getString(R.string.ivSeed), iv);
+            editor.putString(c.getString(R.string.passwordHash), passwordHash);
         }
         editor.commit();
     }
