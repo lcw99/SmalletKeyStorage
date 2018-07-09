@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Smallet Key Vault</string>
+    <string name="title_activity_new_user">월렛 만들기</string>
+    <string name="done_seed_backup">마스터 시드 백업 완료</string>
+    <string name="password_input_error">4자 이상의 숫자 또는 영문자</string>
+</resources>
