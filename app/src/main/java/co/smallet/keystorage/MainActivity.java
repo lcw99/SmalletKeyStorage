@@ -220,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    public void loadEtherOfflineSigner(final String privateKey, final String to, final String value, final int chainId, final String nonce, final String gasPrice, final String gasLimits, final String dataStr) {
+    public void loadEtherOfflineSigner(final String privateKey, final String to, final String value, final int chainId, final String nonce, final String gasPrice, final String gasLimits, final String dataStr, final String dataInfoStr) {
         // custom dialog
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.sign_dialog);
@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 "gasPrice: " + gasPriceDec.toString() + " GWEI\n" +
                 "gasLimits: " + gasLimits;
         if (dataStr.length() > 0)
-            txInfo += "\ndata:" + dataStr;
+            txInfo += "\ndata:" + dataInfoStr;
         TextView text = (TextView) dialog.findViewById(R.id.twTo);
         text.setText(to);
         text = (TextView) dialog.findViewById(R.id.twValue);
@@ -338,10 +338,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String gasLimits = data.getString("gasLimits");
                     String dataStr = data.getString("data");
                     Log.e("keystorage", "from=" + from + ", to=" + to);
+                    String dataInfoStr = "";
                     if (dataStr == null)
                         dataStr = "";
+                    else
+                        dataInfoStr = data.getString("datainfo", "");
                     String privateKey = Utils.getPrivateKey(main, from);
-                    main.loadEtherOfflineSigner(privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr);
+                    main.loadEtherOfflineSigner(privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr, dataInfoStr);
                     break;
                 case Constants.RETURN_TX:
                     main.mKeyStorageService.returnRawTxToWalletService(msg.getData());
