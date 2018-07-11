@@ -7,11 +7,11 @@
         <item
             android:id="@+id/nav_master_seed"
             android:icon="@drawable/ic_menu_master_seed"
-            android:title="Master Seed" />
+            android:title="@string/drawer_master_seed" />
         <item
             android:id="@+id/nav_remove_all_account"
             android:icon="@drawable/ic_menu_remove_all_account"
-            android:title="Remove All Account" />
+            android:title="@string/remove_all_account" />
     </group>
 
     <item android:title="Communicate">
@@ -19,11 +19,11 @@
             <item
                 android:id="@+id/nav_share"
                 android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:title="@string/share" />
             <item
                 android:id="@+id/nav_send"
                 android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+                android:title="@string/send" />
         </menu>
     </item>
 

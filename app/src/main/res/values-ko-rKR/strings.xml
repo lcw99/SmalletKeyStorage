@@ -1,7 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Smallet Key Vault</string>
+    <string name="app_name">스몰렛 키 볼트</string>
     <string name="title_activity_new_user">월렛 만들기</string>
     <string name="done_seed_backup">마스터 시드 백업 완료</string>
     <string name="password_input_error">4자 이상의 숫자 또는 영문자</string>
+    <string name="action_settings">설정</string>
+    <string name="import_seed">마스터 시드 가져오기</string>
+    <string name="title_activity_settings">설정</string>
+    <string name="pref_header_general">일반설정</string>
+    <string name="goto_play_store">구글 플레이 스토어 가기</string>
+    <string name="email_to_support_team">지원팀에 메일 보내기</string>
+    <string name="title_mail_to_support">메일 보내기</string>
+    <string name="send_log_to_support_team">지원팀에 로그자료 보내기</string>
+    <string name="title_send_log">로그자료 보내기</string>
+    <string name="show_system_app_info">시스템 앱 정보</string>
+    <string name="title_show_system_app_info">앱 정보</string>
+    <string name="program_version">프로그램 버전</string>
+    <string name="company_smallet_network_inc">(주)스몰렛 네트웍스</string>
+    <string name="developer">개발회사</string>
+    <string name="rating_and_check_app_version">앱 평가 및 버전 체크</string>
+    <string name="drawer_master_seed">마스터 시드</string>
+    <string name="nav_header_title">스몰렛 키 볼트</string>
+    <string name="remove_all_account">모든 계정 삭제</string>
+    <string name="send">보내기</string>
+    <string name="share">공유</string>
+    <string name="support">지원</string>
+
 </resources>

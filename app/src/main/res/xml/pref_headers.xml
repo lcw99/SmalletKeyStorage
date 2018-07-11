@@ -5,7 +5,7 @@
     <header
         android:fragment="co.smallet.keystorage.SettingsActivity$SupportPreferenceFragment"
         android:icon="@drawable/ic_support_black_24dp"
-        android:title="Support" />
+        android:title="@string/support" />
 
     <!--
     <header
