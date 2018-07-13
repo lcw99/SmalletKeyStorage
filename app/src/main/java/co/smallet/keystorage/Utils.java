@@ -1,8 +1,11 @@
 package co.smallet.keystorage;
 
 import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.preference.Preference;
@@ -12,15 +15,18 @@ import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import co.smallet.keystorage.contentprovider.KeyVaultContentProvider;
 import co.smallet.smalletandroidlibrary.AddressInfo;
 import co.smallet.smalletandroidlibrary.ObjectSerializer;
 
 import static android.content.Context.MODE_PRIVATE;
+import static co.smallet.keystorage.contentprovider.KeyVaultContentProvider.CONTENT_URI;
 
 public class Utils {
     @SuppressLint("SetJavaScriptEnabled")
@@ -102,6 +108,43 @@ public class Utils {
             e.printStackTrace();
         }
         editor.commit();
+
+        addDataToContentProvider(c, hdCoinId, address, keyIndex, owner);
+    }
+
+    private static void addDataToContentProvider(Context c,Integer hdCoinId,  String address, Integer keyIndex, String owner) {
+        if (isKeyExistInContentProvider(c, address, owner))
+            return;
+        ContentValues values = new ContentValues();
+        values.put(KeyVaultContentProvider.PUBLICKEY, address);
+        values.put(KeyVaultContentProvider.KEYINDEX, keyIndex);
+        values.put(KeyVaultContentProvider.HDCOINID, hdCoinId);
+        values.put(KeyVaultContentProvider.OWNER, owner);
+
+        //Uri uri = c.getContentResolver().insert(CONTENT_URI, values);
+        KeyVaultContentProvider.myInsert(values);
+    }
+
+    private static boolean isKeyExistInContentProvider(Context context, String address, String owner) {
+        String[] projection = {
+                KeyVaultContentProvider._ID,
+                KeyVaultContentProvider.PUBLICKEY,
+                KeyVaultContentProvider.KEYINDEX,
+                KeyVaultContentProvider.HDCOINID,
+                KeyVaultContentProvider.OWNER,
+        };
+
+        String selection = KeyVaultContentProvider.OWNER + " = ? AND " + KeyVaultContentProvider.PUBLICKEY + " = ?";
+        String[] selectionArg = { owner, address };
+        Cursor c = context.getContentResolver().query(CONTENT_URI, projection, selection, selectionArg, KeyVaultContentProvider.PUBLICKEY);
+        if (c.getCount() == 1)
+            return true;
+        return false;
+    }
+
+    private static void deleteAllPublicKeyInContentProvider(Context context) {
+        //context.getContentResolver().delete(CONTENT_URI, null, null);
+        KeyVaultContentProvider.myDelete(null, null);
     }
 
     public static HashMap<Integer, String> getAddressListFromPref(Context c, String prefix, Integer hdCoinId) {
@@ -226,6 +269,7 @@ public class Utils {
             }
 
             editor.commit();
+            deleteAllPublicKeyInContentProvider(c);
         }
     }
 
@@ -250,5 +294,7 @@ public class Utils {
             editor.putString(c.getString(R.string.passwordHash), passwordHash);
         }
         editor.commit();
+
+        deleteAllPublicKeyInContentProvider(c);
     }
 }
