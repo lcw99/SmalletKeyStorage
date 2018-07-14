@@ -110,5 +110,9 @@
     <string name="send">Send</string>
     <string name="drawer_master_seed">Master Seed</string>
     <string name="support">Support</string>
+    <string name="remove_all_account_dialog_title">Remove All Account</string>
+    <string name="remove_all_account_dialog_msg">Remove all accounts already created. You can generate it from your wallet app.  OK to proceed.</string>
+    <string name="dialog_button_cancel">Cancel</string>
+    <string name="dialog_button_ok">OK</string>
 
 </resources>

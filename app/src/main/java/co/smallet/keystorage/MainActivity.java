@@ -500,14 +500,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(intent);
         } else if (id == R.id.nav_remove_all_account) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Remove All Account")
-                    .setMessage("Remove all account generated. You can create again from your wallet app.\n\nOK to proceed.")
-                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            builder.setTitle(R.string.remove_all_account_dialog_title)
+                    .setMessage(R.string.remove_all_account_dialog_msg)
+                    .setNegativeButton(R.string.dialog_button_cancel, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                         }
                     })
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    .setPositiveButton(R.string.dialog_button_ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             Utils.removeAllAccount(main);
