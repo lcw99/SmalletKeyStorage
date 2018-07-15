@@ -85,8 +85,9 @@ public class SignupActivity extends AppCompatActivity {
                     _signupButton.setText(R.string.import_seed);
                 } else {
                     _seedText.setVisibility(View.GONE);
+                    _passphraseText.setText("");
                     _passphraseText.setVisibility(View.GONE);
-                    _signupButton.setText("Create Account");
+                    _signupButton.setText(R.string.create_account_button);
                 }
             }
         });
@@ -99,7 +100,7 @@ public class SignupActivity extends AppCompatActivity {
 
     public void signup() {
         Log.d(TAG, "Signup");
-        if (_signupButton.getText().equals(getResources().getString(R.string.done_seed_backup)) || _signupButton.getText().equals("Login")) {
+        if (_signupButton.getText().equals(getResources().getString(R.string.done_seed_backup)) || _signupButton.getText().equals(getResources().getString(R.string.login))) {
             Utils.encryptMasterSeedAndSave(this, seedGenerated, passphrase);
 
             final String passwordHash = Hashing.sha256().hashString(password, Charset.defaultCharset()).toString();
@@ -118,28 +119,32 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        String title = "NEW Master Seed";
-        String msg = "Generating NEW master seed means, delete all current Keys and wallet address in the vault. You should bakcup current Master Seed.\n\nOK to proceed.";
-        if (_signupButton.getText().equals(getResources().getString(R.string.import_seed))) {
-            title = "Importing Master Seed";
-            msg = "Importing MASTER SEED means, delete all current Keys and wallet address in the vault. You should bakcup current Master Seed.\n\nOK to proceed.";
+        if (Utils.isMasterKeyExist(this)) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppTheme_Dark_Dialog);
+            String title = getString(R.string.new_master_seed);
+            String msg = getString(R.string.generating_new_mater_seed_message);
+            if (_signupButton.getText().equals(getResources().getString(R.string.import_seed))) {
+                title = getString(R.string.master_seed_import_title);
+                msg = getString(R.string.import_master_seed_message);
+            }
+            builder.setTitle(title)
+                    .setMessage(msg)
+                    .setPositiveButton(R.string.dialog_button_ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            llCurrentSeed.setVisibility(View.GONE);
+                            generateMasterSeed();
+                        }
+                    })
+                    .setNegativeButton(R.string.dialog_button_cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                        }
+                    })
+                    .show();
+        } else {
+            generateMasterSeed();
         }
-        builder.setTitle(title)
-                .setMessage(msg)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                llCurrentSeed.setVisibility(View.GONE);
-                                generateMasterSeed();
-                            }
-                        })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                    }
-                })
-                .show();
     }
 
     private void generateMasterSeed() {
@@ -149,7 +154,7 @@ public class SignupActivity extends AppCompatActivity {
             @Override
             public void onReturnValue(String data, HashMap<Integer, Coin> coinList) {
                 if (data.startsWith("error")) {
-                    _backupSeedInfo.setText("Import failed - " + data.replace("error=", ""));
+                    _backupSeedInfo.setText(getString(R.string.import_failed) + data.replace("error=", ""));
                     _backupSeedInfo.setVisibility(View.VISIBLE);
                     return;
                 }
@@ -169,8 +174,8 @@ public class SignupActivity extends AppCompatActivity {
                 _seedText.setKeyListener(null);
                 _haveSeedCheckbox.setVisibility(View.GONE);
                 if (!seedText.equals("")) {
-                    _backupSeedInfo.setText("Master seed Import successful.");
-                    _signupButton.setText("Login");
+                    _backupSeedInfo.setText(R.string.master_seed_import_success);
+                    _signupButton.setText(R.string.login);
                 } else {
                     _signupButton.setText(R.string.done_seed_backup);
                 }
@@ -189,7 +194,7 @@ public class SignupActivity extends AppCompatActivity {
 
 
     public void onSignupFailed() {
-        Toast.makeText(getBaseContext(), "Account creation failed", Toast.LENGTH_LONG).show();
+        Toast.makeText(getBaseContext(), R.string.account_creation_failed, Toast.LENGTH_LONG).show();
 
         _signupButton.setEnabled(true);
     }
@@ -203,13 +208,13 @@ public class SignupActivity extends AppCompatActivity {
         String reEnterPassword = _reEnterPasswordText.getText().toString();
 
         if (_seedText.getVisibility() == View.VISIBLE && seed.isEmpty()) {
-            _seedText.setError("enter valid seed words");
+            _seedText.setError(getString(R.string.enter_valid_seed_words));
             valid = false;
         } else if (_seedText.getVisibility() == View.VISIBLE) {
             wordCount = Utils.getWordCount(seed).toString();
             List<String> strengthList = Arrays.asList("12", "15", "18", "21", "24");
             if (!strengthList.contains(wordCount)) {
-                _seedText.setError("number of words in the seed word must be 12, 15, 18, 21 or 24.");
+                _seedText.setError(getString(R.string.number_of_seed_message));
                 valid = false;
             } else {
                 _seedText.setError(null);
@@ -224,7 +229,7 @@ public class SignupActivity extends AppCompatActivity {
         }
 
         if (reEnterPassword.isEmpty() || reEnterPassword.length() < 4 || !(reEnterPassword.equals(password))) {
-            _reEnterPasswordText.setError("Password Do not match");
+            _reEnterPasswordText.setError(getString(R.string.password_do_not_match));
             valid = false;
         } else {
             _reEnterPasswordText.setError(null);

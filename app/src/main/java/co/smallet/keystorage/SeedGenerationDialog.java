@@ -103,7 +103,7 @@ public class SeedGenerationDialog extends Dialog {
                                 } else {
                                     returnToParent("");
                                 }
-                            } catch (JSONException e) {
+                            } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
@@ -167,7 +167,7 @@ public class SeedGenerationDialog extends Dialog {
                     webViewBIP39.evaluateJavascript("getSeedAndAddress(" + keyIndex + ");", new ValueCallback<String>() {
                         @Override
                         public void onReceiveValue(String data) {
-                            Log.e("keystorage", "data=" + data);
+                            //Log.d("keystorage", "data=" + data);
                             returnToParent(data);
                         }
                     });

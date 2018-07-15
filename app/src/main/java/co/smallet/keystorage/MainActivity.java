@@ -53,7 +53,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-// note globe between process will soon hello rain bone easily potato fragile
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     public static MainActivity main;
     Spinner spCoins;
@@ -499,7 +498,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_remove_all_account) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppTheme_Dark_Dialog);
             builder.setTitle(R.string.remove_all_account_dialog_title)
                     .setMessage(R.string.remove_all_account_dialog_msg)
                     .setNegativeButton(R.string.dialog_button_cancel, new DialogInterface.OnClickListener() {

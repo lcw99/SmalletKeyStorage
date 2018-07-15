@@ -5,9 +5,9 @@ android {
     defaultConfig {
         applicationId "co.smallet.keystorage"
         minSdkVersion 23
-        targetSdkVersion 28
-        versionCode 11
-        versionName "0.4.1.11"
+        targetSdkVersion 27
+        versionCode 22
+        versionName "0.4.5.22"
         testInstrumentationRunner "android.support.metamask.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }

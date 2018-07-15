@@ -114,5 +114,27 @@
     <string name="remove_all_account_dialog_msg">Remove all accounts already created. You can generate it from your wallet app.  OK to proceed.</string>
     <string name="dialog_button_cancel">Cancel</string>
     <string name="dialog_button_ok">OK</string>
+    <string name="password_hint">Password</string>
+    <string name="re_enter_password_hint">Re-enter Password</string>
+    <string name="i_have_seed_bip39">I have Seed(BIP39)</string>
+    <string name="passphrase_optional">Passphrase(optional)</string>
+    <string name="backup_your_master_seed_to_safe_place_if_you_lost_these_seed_words_you_cannot_recover_your_wallet_keys">Backup your master seed to safe place. If you lost these seed words, you cannot recover your wallet keys.</string>
+    <string name="generate_new_master_seed">Generate NEW Master Seed</string>
+    <string name="already_have_a_seed_login">Already have a seed? Login</string>
+    <string name="master_seed_hont">Master Seed</string>
+    <string name="current_master_seed">Current Master Seed</string>
+    <string name="create_account_button">Create Account</string>
+    <string name="new_master_seed">NEW Master Seed</string>
+    <string name="generating_new_mater_seed_message">Generating NEW master seed means, delete all current Keys and wallet address in the vault. You should bakcup current Master Seed.  OK to proceed.</string>
+    <string name="master_seed_import_title">Importing Master Seed</string>
+    <string name="import_master_seed_message">Importing MASTER SEED means, delete all current Keys and wallet address in the vault. You should bakcup current Master Seed.  OK to proceed.</string>
+    <string name="import_failed">Import failed -</string>
+    <string name="master_seed_import_success">Master seed Import successful.</string>
+    <string name="login">Login</string>
+    <string name="password_do_not_match">Password Do not match</string>
+    <string name="number_of_seed_message">number of words in the seed word must be 12, 15, 18, 21 or 24.</string>
+    <string name="account_creation_failed">Account creation failed</string>
+    <string name="enter_valid_seed_words">enter valid seed words</string>
+    <string name="no_master_seed_yet_create_one">No MASTER SEED yet? Create one</string>
 
 </resources>

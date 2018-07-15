@@ -28,12 +28,12 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Current Master Seed"
+                android:text="@string/current_master_seed"
                 android:textSize="12sp"/>
             <TextView android:id="@+id/current_seed"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="current seed"
+                android:text="@string/current_master_seed"
                 android:textColor="@color/accent"
                 android:textSize="20sp"/>
         </LinearLayout>
@@ -50,7 +50,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text=""
-                android:hint="Master Seed"
+                android:hint="@string/master_seed_hont"
                 android:lines="3"
                 android:minLines="3"
                 android:visibility="gone"
@@ -68,7 +68,7 @@
                 android:layout_height="wrap_content"
                 android:inputType="textPostalAddress"
                 android:visibility="gone"
-                android:hint="Passphrase(optional)" />
+                android:hint="@string/passphrase_optional" />
         </android.support.design.widget.TextInputLayout>
 
 
@@ -82,7 +82,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
-                android:hint="Password"/>
+                android:hint="@string/password_hint"/>
         </android.support.design.widget.TextInputLayout>
 
         <!-- Password Re-enter Label -->
@@ -95,7 +95,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
-                android:hint="Re-enter Password"/>
+                android:hint="@string/re_enter_password_hint"/>
         </android.support.design.widget.TextInputLayout>
 
         <CheckBox
@@ -103,13 +103,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="I have Seed(BIP39)" />
+            android:text="@string/i_have_seed_bip39" />
 
         <TextView android:id="@+id/text_backup_seed"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:text="Backup your master seed to safe place. If you lost these seed words, you cannot recover your wallet keys."
+            android:text="@string/backup_your_master_seed_to_safe_place_if_you_lost_these_seed_words_you_cannot_recover_your_wallet_keys"
             android:visibility="gone"
             android:textSize="16dip"/>
 
@@ -121,13 +121,13 @@
             android:layout_marginTop="10dp"
             android:layout_marginBottom="24dp"
             android:padding="12dp"
-            android:text="Generate NEW Master Seed"/>
+            android:text="@string/generate_new_master_seed"/>
 
         <TextView android:id="@+id/link_login"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:text="Already have a seed? Login"
+            android:text="@string/already_have_a_seed_login"
             android:gravity="center"
             android:visibility="gone"
             android:textSize="16dip"/>

@@ -2,12 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="co.smallet.keystorage">
 
-    <permission
-        android:name="co.smallet.keystorage.permission.SMALLET"
-        android:protectionLevel="signature" />
-    <permission android:name="co.smallet.keystorage.provider.KeyVaultContentProvider.READ_PERMISSION"/>
-
-    <uses-permission android:name="co.smallet.keystorage.permission.SMALLET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
@@ -51,7 +45,7 @@
         <provider
             android:name=".contentprovider.KeyVaultContentProvider"
             android:authorities="co.smallet.keystorage.provider.KeyVaultContentProvider"
-            android:readPermission="co.smallet.keystorage.provider.KeyVaultContentProvider.READ_PERMISSION"
+            android:readPermission="co.smallet.keystorage.KeyVaultContentProvider.READ"
             android:enabled="true"
             android:exported="true"/>
     </application>

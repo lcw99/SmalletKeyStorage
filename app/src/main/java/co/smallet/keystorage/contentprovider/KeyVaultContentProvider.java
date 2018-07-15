@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -26,7 +27,7 @@ public class KeyVaultContentProvider extends ContentProvider {
     static final public String OWNER = "owner";
     static final public String HDCOINID = "hdcoinid";
 
-    private static HashMap<String, String> PUBLICKEYS_PROJECTION_MAP;
+    private static HashMap<String, String> PUBLICKEYS_PROJECTION_MAP = new HashMap<>();
 
     static final int PUBLICKEYS = 1;
     static final int PUBLICKEY_ID = 2;
@@ -81,6 +82,12 @@ public class KeyVaultContentProvider extends ContentProvider {
         Context context = getContext();
         DatabaseHelper dbHelper = new DatabaseHelper(context);
 
+        PUBLICKEYS_PROJECTION_MAP.put(_ID, _ID);
+        PUBLICKEYS_PROJECTION_MAP.put(PUBLICKEY, PUBLICKEY);
+        PUBLICKEYS_PROJECTION_MAP.put(KEYINDEX, KEYINDEX);
+        PUBLICKEYS_PROJECTION_MAP.put(OWNER, OWNER);
+        PUBLICKEYS_PROJECTION_MAP.put(HDCOINID, HDCOINID);
+
         /**
          * Create a write able database which will trigger its
          * creation if it doesn't already exist.
@@ -120,6 +127,7 @@ public class KeyVaultContentProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection,
                         String selection, String[] selectionArgs, String sortOrder) {
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setStrict(true);
         qb.setTables(PUBLICKEYS_TABLE_NAME);
 
         switch (uriMatcher.match(uri)) {
@@ -140,6 +148,7 @@ public class KeyVaultContentProvider extends ContentProvider {
              */
             sortOrder = KEYINDEX;
         }
+
 
         Cursor c = qb.query(db,	projection,	selection,
                 selectionArgs,null, null, sortOrder);

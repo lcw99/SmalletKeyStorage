@@ -25,5 +25,28 @@
     <string name="send">보내기</string>
     <string name="share">공유</string>
     <string name="support">지원</string>
+    <string name="dialog_button_cancel">취소</string>
+    <string name="dialog_button_ok">확인</string>
+    <string name="remove_all_account_dialog_title">모든 계정 삭제</string>
+    <string name="remove_all_account_dialog_msg">생성된 모든 계정을 삭제 합니다. 월렛 앱에서 다시 생성이 가능합니다. 계속 진행하려면 확인을 누르세요.</string>
+    <string name="password_hint">패스워드</string>
+    <string name="re_enter_password_hint">패스워드 재입력</string>
+    <string name="i_have_seed_bip39">마스터시드 가져오기(BIP39)</string>
+    <string name="passphrase_optional">시드 암호(선택사항)</string>
+    <string name="backup_your_master_seed_to_safe_place_if_you_lost_these_seed_words_you_cannot_recover_your_wallet_keys">마스터 시드를 안전한 곳에 보관하세요. 마스터 시드가 없으면 지갑을 복구 할 수 없습니다.</string>
+    <string name="generate_new_master_seed">새 마스터 시드 생성</string>
+    <string name="already_have_a_seed_login">마스터시드가 있다면 로그인 하세요.</string>
+    <string name="master_seed_hont">마스터 시드</string>
+    <string name="current_master_seed">현재 마스터 시드</string>
+    <string name="create_account_button">계정 생성</string>
+    <string name="new_master_seed">새 마스터 시드</string>
+    <string name="generating_new_mater_seed_message">새 마스터 시드를 생성하면 현재 키 볼트에 있는 모든 계정이 삭제 됩니다. 현재 마스터 시드를 백업해 두세요. 확인을 누르시면 새 마스터 시스들 생성합니다.</string>
+    <string name="master_seed_import_title">마스터 시드 가져오기</string>
+    <string name="import_master_seed_message">마스터 시드를 새로 설정하면 기존의 모든 계정이 삭제 됩니다. 현재 마스터 시드를 백업해 두세요. 확인을 누르시면 마스터 시드 가져오기를 실행합니다.</string>
+    <string name="import_failed">마스터 시드 가져오기 실패 -</string>
+    <string name="master_seed_import_success">마스터 시드를 성공적으로 가져왔습니다.</string>
+    <string name="login">로그인</string>
+    <string name="password_do_not_match">패스워드가 일치 하지 않습니다.</string>
+    <string name="number_of_seed_message">시드의 단어수는 12, 15, 18, 21, 24 중 하나여야 합니다.</string>
 
 </resources>
