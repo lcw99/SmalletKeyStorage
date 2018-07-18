@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 public class CommonUtils {
@@ -75,12 +76,12 @@ public class CommonUtils {
         final String fileName = "log.txt";
         try {
             FileOutputStream  fos = new FileOutputStream(act.getFilesDir() + File.separator + fileName);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            OutputStreamWriter oos = new OutputStreamWriter(fos);
             int start = logs.size() - 1000;
             int i = 0;
             for (String line : logs) {
                 if (i++ > start)
-                    oos.writeChars(line + "\n");
+                    oos.write(line + "\n");
             }
             oos.close();
         } catch (IOException e) {
