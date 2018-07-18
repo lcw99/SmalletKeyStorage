@@ -93,7 +93,7 @@
     <string name="pref_ringtone_silent">Silent</string>
 
     <string name="pref_title_vibrate">Vibrate</string>
-    <string name="support_email" translatable="false">info@silc.club</string>
+    <string name="support_email" translatable="false">support@smallet.co</string>
     <string name="goto_play_store">Goto play store page</string>
     <string name="rating_and_check_app_version">Rating and check version</string>
     <string name="email_to_support_team">Email to support team</string>
@@ -136,5 +136,8 @@
     <string name="account_creation_failed">Account creation failed</string>
     <string name="enter_valid_seed_words">enter valid seed words</string>
     <string name="no_master_seed_yet_create_one">No MASTER SEED yet? Create one</string>
+    <string name="confirm_transaction_title">Confirm Transaction</string>
+    <string name="confirm_button">Confirm</string>
+    <string name="reject_button">Reject</string>
 
 </resources>

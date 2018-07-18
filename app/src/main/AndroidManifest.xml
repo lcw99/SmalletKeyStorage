@@ -48,6 +48,17 @@
             android:readPermission="co.smallet.keystorage.KeyVaultContentProvider.READ"
             android:enabled="true"
             android:exported="true"/>
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="${applicationId}.file.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_provider_paths" />
+        </provider>
+
     </application>
 
 </manifest>

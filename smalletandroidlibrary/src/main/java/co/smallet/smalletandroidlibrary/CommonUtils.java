@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Message;
 import android.provider.Settings;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
@@ -18,8 +19,10 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 public class CommonUtils {
@@ -69,35 +72,36 @@ public class CommonUtils {
         LogCollector collector = new LogCollector(act);
         ArrayList<String> logs = collector.collect();
 
-        String sdcardDir = Environment.getExternalStorageDirectory().getAbsolutePath();
-        String logDir = sdcardDir + "/.StockMasterLogs/";
-        Log.d("lcw", "logdir=" + logDir);
-        File d = new File(logDir);
-        if (!d.exists())
-            d.mkdirs();
-        File tempFile = new File(d, "log.txt");
-
-        FileWriter fw = null;
+        final String fileName = "log.txt";
         try {
-            tempFile.createNewFile();
-            fw = new FileWriter(tempFile);
-            if (fw != null) {
-                int start = logs.size() - 1000;
-                int i = 0;
-                for (String line : logs) {
-                    if (i++ > start)
-                        fw.write(line + "\n");
-                }
-                fw.close();
+            FileOutputStream  fos = new FileOutputStream(act.getFilesDir() + File.separator + fileName);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            int start = logs.size() - 1000;
+            int i = 0;
+            for (String line : logs) {
+                if (i++ > start)
+                    oos.writeChars(line + "\n");
             }
+            oos.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return null;
+        }
+
+        try {
+            File tempFile = new File(act.getFilesDir(), fileName);
+            Intent emailIntent = createEmailIntent(email, act.getResources().getString(R.string.app_name) + " Log", buildInfoBody(act));
+            Uri uri = FileProvider.getUriForFile(act, act.getPackageName() + ".file.provider", tempFile);
+            emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
+            emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+            emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
+            return emailIntent;
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        Intent emailIntent = createEmailIntent(email, act.getResources().getString(R.string.app_name) + " Log", buildInfoBody(act));
-        Uri uri = Uri.fromFile(tempFile);
-        emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
-        return emailIntent;
+
+        return null;
     }
 
     public static void startInstalledAppDetailsActivity(final Activity context) {

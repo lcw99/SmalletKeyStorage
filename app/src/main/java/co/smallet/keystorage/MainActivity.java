@@ -24,6 +24,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -221,11 +222,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void loadEtherOfflineSigner(final String privateKey, final String to, final String value, final int chainId, final String nonce, final String gasPrice, final String gasLimits, final String dataStr, final String dataInfoStr) {
         // custom dialog
-        final Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.sign_dialog);
-        dialog.setTitle("Confirm Transaction");
-
-        // set the custom dialog components - text, image and button
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        final View dialogView = inflater.inflate(R.layout.sign_dialog, null);
+        builder.setTitle(R.string.confirm_transaction_title);
         BigDecimal val = Convert.fromWei(value, Convert.Unit.ETHER);
         BigDecimal gasPriceDec = Convert.fromWei(gasPrice, Convert.Unit.GWEI);
         String txInfo =
@@ -235,14 +235,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 "gasLimits: " + gasLimits;
         if (dataStr.length() > 0)
             txInfo += "\ndata:" + dataInfoStr;
-        TextView text = (TextView) dialog.findViewById(R.id.twTo);
+        TextView text = dialogView.findViewById(R.id.twTo);
         text.setText(to);
-        text = (TextView) dialog.findViewById(R.id.twValue);
+        text = dialogView.findViewById(R.id.twValue);
         text.setText(val.toString() + " Ether");
-        text = (TextView) dialog.findViewById(R.id.twOtherInfo);
+        text = dialogView.findViewById(R.id.twOtherInfo);
         text.setText(txInfo);
-
-        Button btReject = (Button) dialog.findViewById(R.id.btReject);
+        builder.setView(dialogView);
+        final Dialog dialog = builder.create();
+        Button btReject = dialogView.findViewById(R.id.btReject);
         btReject.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -256,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        Button btConfirm = (Button) dialog.findViewById(R.id.btConfirm);
+        Button btConfirm = dialogView.findViewById(R.id.btConfirm);
         btConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
