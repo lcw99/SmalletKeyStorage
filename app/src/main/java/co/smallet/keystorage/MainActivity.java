@@ -93,10 +93,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -105,23 +105,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        spCoins = (Spinner) findViewById(R.id.spCoins);
+        spCoins = findViewById(R.id.spCoins);
 
         web3j = Web3jFactory.build(new HttpService("https://ropsten.infura.io/du9Plyu1xJErXebTWjsn"));
 
-        mTextMessage = (TextView) findViewById(R.id.message);
+        mTextMessage = findViewById(R.id.message);
 
-        final TextView textView = (TextView) findViewById(R.id.text);
-        final Button button = (Button) findViewById(R.id.button);
+        final TextView textView = findViewById(R.id.text);
+        final Button button = findViewById(R.id.button);
 
         // Our 'ready' listener will wait for a ready event from the micro service.  Once
         // the micro service is ready, we'll ping it by emitting a "ping" event to the
@@ -374,9 +374,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     boolean masterSeedExist;
     private void generateAddress(final Integer hdCoinCode, final Integer keyIndex, final String owner, final boolean returnToWallet) {
         String masterSeed = Utils.decryptMasterSeed(main);
-        masterSeedExist = false;
-        if (!masterSeed.equals(""))
-            masterSeedExist = true;
+        masterSeedExist = !masterSeed.equals("");
         String passphrase = "";
         int passPhraseIndex = masterSeed.indexOf('|');
         if (passPhraseIndex > 0) {
@@ -461,7 +459,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -522,7 +520,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             //Utils.getPref(this).edit().clear().commit();
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }

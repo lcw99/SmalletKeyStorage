@@ -101,9 +101,7 @@ public class Utils {
 
     private static boolean isKeyExistInDatabase(String address) {
         Cursor c = MainActivity.database.queryPrivateKeyEncrypted(address);
-        if (c.getCount() == 1)
-            return true;
-        return false;
+        return c.getCount() == 1;
     }
 
     private static void deleteAllPublicKeyInContentProviderAndDatabase(Context context) {
@@ -139,10 +137,7 @@ public class Utils {
 
     public static boolean isMasterKeyExist(Context c) {
         String encData = Utils.getPref(c).getString(c.getString(R.string.encSeed), null);
-        if (encData != null)
-            return true;
-        else
-            return false;
+        return encData != null;
     }
 
     private static String decryptData(Context c, String alias, String dataKey, String ivKey) {

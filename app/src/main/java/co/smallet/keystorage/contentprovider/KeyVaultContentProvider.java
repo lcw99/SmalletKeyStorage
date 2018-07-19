@@ -95,7 +95,7 @@ public class KeyVaultContentProvider extends ContentProvider {
          */
 
         db = dbHelper.getWritableDatabase();
-        return (db == null)? false:true;
+        return db != null;
     }
 
     public static void myInsert(ContentValues values) {

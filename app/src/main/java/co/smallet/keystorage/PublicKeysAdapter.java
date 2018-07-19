@@ -62,10 +62,10 @@ public class PublicKeysAdapter extends Adapter<PublicKeysAdapter.ViewHolder> {
             // to access the context from any ViewHolder instance.
             super(itemView);
 
-            twCoinType = (TextView) itemView.findViewById(R.id.text_coinType);
+            twCoinType = itemView.findViewById(R.id.text_coinType);
             //twKeyIndex = (TextView) itemView.findViewById(R.id.text_keyIndex);
-            twPublicKey = (TextView) itemView.findViewById(R.id.text_public_key);
-            coinImage = (ImageView) itemView.findViewById(R.id.coin_image);
+            twPublicKey = itemView.findViewById(R.id.text_public_key);
+            coinImage = itemView.findViewById(R.id.coin_image);
 
         }
     }
