@@ -23,13 +23,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class SeedGenerationDialog extends Dialog {
+class SeedGenerationDialog extends Dialog {
 
-    Context dialog;
-    WebView webViewBIP39;
-    ReturnValueEvent mReturnValue;
-    HashMap<Integer, Coin> coinList = new HashMap<Integer, Coin>();
-    Integer coinIndex;
+    private Context dialog;
+    private WebView webViewBIP39;
+    private ReturnValueEvent mReturnValue;
+    private HashMap<Integer, Coin> coinList = new HashMap<Integer, Coin>();
+    private Integer coinIndex;
     private Integer coinHdCode;
     private Integer keyIndex;
 
@@ -47,7 +47,7 @@ public class SeedGenerationDialog extends Dialog {
         SeedGenerationDialog.this.dismiss();
     }
 
-    public SeedGenerationDialog(@NonNull Context context, String seed, String passPhrase, String strength, Integer _coinHdCode, Integer _keyIndex, ReturnValueEvent event) {
+    SeedGenerationDialog(@NonNull Context context, String seed, String passPhrase, String strength, Integer _coinHdCode, Integer _keyIndex, ReturnValueEvent event) {
         super(context);
         setContentView(R.layout.dialog_seed_generate);
 
@@ -109,7 +109,8 @@ public class SeedGenerationDialog extends Dialog {
                         }
                     });
                 } else {
-                    String script = "callGenerateClick('" + coinIndex + "','" + strength + "','" + seed + "','" + passPhrase + "');";
+                    String seedClean = seed.replaceAll("\\r\\n|\\r|\\n", "");
+                    String script = "callGenerateClick('" + coinIndex + "','" + strength + "','" + seedClean + "','" + passPhrase + "');";
                     Log.e("keystorage", script);
                     webViewBIP39.evaluateJavascript(script, new ValueCallback<String>() {
                         @Override
@@ -126,11 +127,9 @@ public class SeedGenerationDialog extends Dialog {
 
 
     public class JavaScriptInterfaceSeedGenerating {
-        private Context mContext;
         private WebView mWebView;
 
-        public JavaScriptInterfaceSeedGenerating(Context c, WebView webView) {
-            this.mContext = c;
+        JavaScriptInterfaceSeedGenerating(Context c, WebView webView) {
             this.mWebView = webView;
         }
 

@@ -7,7 +7,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -18,23 +17,17 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 import android.os.Process;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 
-import co.smallet.smalletandroidlibrary.AddressInfo;
+import co.smallet.keystorage.database.KeystorageDatabase;
 import co.smallet.smalletandroidlibrary.GlobalConstants;
-import co.smallet.smalletandroidlibrary.ObjectSerializer;
-import jnr.x86asm.Util;
 
 import static android.app.NotificationManager.IMPORTANCE_HIGH;
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-import static co.smallet.keystorage.Utils.getAddressListForOwnerFromPref;
 
 
 public class KeyStorageService extends Service {
@@ -59,17 +52,16 @@ public class KeyStorageService extends Service {
         startService(i);
     }
 
-    public void returnAddressToWalletService(String address, String ownerAddressList, boolean isAddressCreated) {
-        returnAddressToWalletService(currentCallPackage, currentCallClass, address, ownerAddressList, isAddressCreated);
+    public void returnAddressToWalletService(String address, boolean isAddressCreated) {
+        returnAddressToWalletService(currentCallPackage, currentCallClass, address, isAddressCreated);
     }
 
-    public void returnAddressToWalletService(String callPackage, String callClass, String address, String ownerAddressList, boolean isAddressCreated) {
+    public void returnAddressToWalletService(String callPackage, String callClass, String address, boolean isAddressCreated) {
         Log.e("keystorage", "return to wallet--------------------------------------------");
         Intent i = new Intent();
         i.setComponent(new ComponentName(callPackage, callClass));
         i.putExtra("action", GlobalConstants.SERVICE_GET_ADDRESS);
         i.putExtra("PUBLIC_ADDRESS", address);
-        i.putExtra("PUBLIC_ADDRESS_LIST", ownerAddressList);
         i.putExtra("IS_CREATED", isAddressCreated);
         startService(i);
     }
@@ -99,16 +91,14 @@ public class KeyStorageService extends Service {
                         String owner = msg.getData().getString("owner");
                         String callPackage = msg.getData().getString("callerPackage");
                         String callClass = msg.getData().getString("callerClass");
-                        HashMap<Integer, String> publicKeys = Utils.getAddressListFromPref(KeyStorageService.this, "publickey", hdCoinCode);
-                        String address = publicKeys.get(keyIndex);
-                        String ownerAddressList = Utils.getAddressListForOwnerFromPrefEncoded(KeyStorageService.this, owner);
-                        if (address != null && ownerAddressList != null) {
-                            returnAddressToWalletService(callPackage, callClass, address, ownerAddressList, false);
+                        String address = Utils.getPublicAddressFromDatabase(hdCoinCode, owner, keyIndex);
+                        if (address != null) {
+                            returnAddressToWalletService(callPackage, callClass, address, false);
                             return;
                         }
 
                         if (!Utils.isMasterKeyExist(KeyStorageService.this)) {
-                            returnAddressToWalletService(callPackage, callClass, null, null, false);
+                            returnAddressToWalletService(callPackage, callClass, null, false);
                             return;
                         }
 
@@ -182,6 +172,9 @@ public class KeyStorageService extends Service {
 
     @Override
     public void onCreate() {
+        if (MainActivity.database == null) {
+            MainActivity.database = new KeystorageDatabase(this);
+        }
         // Start up the thread running the service.  Note that we create a
         // separate thread because the service normally runs in the process's
         // main thread, which we don't want to block.  We also make it

@@ -14,6 +14,7 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class KeyVaultContentProvider extends ContentProvider {
@@ -157,6 +158,39 @@ public class KeyVaultContentProvider extends ContentProvider {
          */
         c.setNotificationUri(getContext().getContentResolver(), uri);
         return c;
+    }
+
+    public static Cursor queryPublicAddress(String owner, Integer hdCoinId, Integer keyIndex) {
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setStrict(true);
+        qb.setTables(PUBLICKEYS_TABLE_NAME);
+
+        String[] projection = {
+                PUBLICKEY,
+                KEYINDEX,
+                OWNER,
+                HDCOINID
+        };
+
+        String selection = null;
+        ArrayList<String> selectionArgs = null;
+        if (owner != null) {
+            selection = OWNER + " = ? ";
+            selectionArgs = new ArrayList<>();
+            selectionArgs.add(owner);
+            if (hdCoinId != -1) {
+                selection += " AND " + HDCOINID + " = ? ";
+                selectionArgs.add(hdCoinId.toString());
+            }
+            if (keyIndex != -1) {
+                selection += " AND " + KEYINDEX + " = ? ";
+                selectionArgs.add(keyIndex.toString());
+            }
+        }
+        String[] selArg = null;
+        if (selectionArgs != null)
+            selArg = selectionArgs.toArray(new String[0]);
+        return qb.query(db, projection,	selection, selArg, null, null, KEYINDEX);
     }
 
     public static void myDelete(String selection, String[] selectionArgs) {

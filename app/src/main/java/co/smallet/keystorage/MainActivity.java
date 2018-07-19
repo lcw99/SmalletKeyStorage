@@ -7,7 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.net.Uri;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -54,6 +54,9 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import co.smallet.keystorage.database.KeystorageDatabase;
+import co.smallet.smalletandroidlibrary.AddressInfo;
+
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     public static MainActivity main;
     Spinner spCoins;
@@ -69,12 +72,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String callPackage;
     String callClass;
 
+    static public KeystorageDatabase database;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         main = this;
+
+        database = new KeystorageDatabase(this);
 
         Intent intent = getIntent();
         if (intent != null) {
@@ -403,12 +410,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (!masterSeedExist) {
                         Utils.encryptMasterSeedAndSave(main, seed, "");
                     }
-                    Utils.addAddressToPref(main, hdCoinCode, address, keyIndex, privateKey, owner);
+                    Utils.addAddressToDatabase(hdCoinCode, address, keyIndex, privateKey, owner);
                     showPublicKeys();
-                    String ownerAddressList = Utils.getAddressListForOwnerFromPrefEncoded(main, owner);
                     if (returnToWallet) {
-                        Log.e("keystorage", "current owner address size=" + Utils.getAddressListForOwnerFromPref(main, owner).size());
-                        mKeyStorageService.returnAddressToWalletService(address, ownerAddressList, true);
+                        mKeyStorageService.returnAddressToWalletService(address, true);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -440,16 +445,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (coinList == null)
             return;
         PublicKeysAdapter publicKeysAdapter = new PublicKeysAdapter(this);
-        ArrayList<Integer> issuedCoins =  Utils.getIssuedCoinsFromPref(this);
-        for (Integer hdCoinId : issuedCoins) {
-            HashMap<Integer, String> publicAddressList = Utils.getAddressListFromPref(this, "publickey", hdCoinId);
-            for (Integer keyIndex : publicAddressList.keySet()) {
-                String publicAddress = publicAddressList.get(keyIndex);
-                String coinName = coinList.get(hdCoinId).name;
-                String coinNameShort = coinName.replace(" ", "").replace("-", "_").toLowerCase();
-                int imageId = getResources().getIdentifier(coinNameShort, "drawable", "co.smallet.keystorage");
-                publicKeysAdapter.addPublicKey(coinName, keyIndex, publicAddress, imageId);
-            }
+        ArrayList<AddressInfo> addressInfos = Utils.getAddressListForOwnerFromDatabase(null);
+
+        for (AddressInfo ai : addressInfos) {
+            String publicAddress = ai.getAddress();
+            String coinName = coinList.get(ai.getHdCoindId()).name;
+            String coinNameShort = coinName.replace(" ", "").replace("-", "_").toLowerCase();
+            int imageId = getResources().getIdentifier(coinNameShort, "drawable", "co.smallet.keystorage");
+            publicKeysAdapter.addPublicKey(coinName, ai.getKeyIndex(), publicAddress, imageId);
         }
         RecyclerView rvPublicKeys = findViewById(R.id.rvPublicKeys);
         rvPublicKeys.setAdapter(publicKeysAdapter);

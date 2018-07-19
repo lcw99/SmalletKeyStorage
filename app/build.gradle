@@ -6,8 +6,8 @@ android {
         applicationId "co.smallet.keystorage"
         minSdkVersion 23
         targetSdkVersion 27
-        versionCode 23
-        versionName "0.4.6.23"
+        versionCode 24
+        versionName "0.4.7.24"
         testInstrumentationRunner "android.support.metamask.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }

@@ -5,28 +5,22 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
-import android.preference.Preference;
 import android.util.Base64;
 import android.util.Log;
 import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import co.smallet.keystorage.contentprovider.KeyVaultContentProvider;
+import co.smallet.keystorage.database.KeystorageDatabase;
 import co.smallet.smalletandroidlibrary.AddressInfo;
-import co.smallet.smalletandroidlibrary.ObjectSerializer;
 
 import static android.content.Context.MODE_PRIVATE;
-import static co.smallet.keystorage.contentprovider.KeyVaultContentProvider.CONTENT_URI;
 
 public class Utils {
     @SuppressLint("SetJavaScriptEnabled")
@@ -69,23 +63,14 @@ public class Utils {
          return c.getSharedPreferences(Constants.PREFS_ADDRESS, MODE_PRIVATE);
     }
 
-    public static void addAddressToPref(Context c,Integer hdCoinId,  String address, Integer keyIndex, String privateKey, String owner) {
+    public static void addAddressToDatabase(Integer hdCoinId, String address, Integer keyIndex, String privateKey, String owner) {
         String addressForKey = address;
         if (hdCoinId == 60)     // ETH is case insensitive
             addressForKey = address.toLowerCase();
 
-        ArrayList<Integer> issuedCoins = getIssuedCoinsFromPref(c);
-        if (!issuedCoins.contains(hdCoinId))
-            addIssuedCoins(c, hdCoinId);
-        HashMap<Integer, String> publicKeys = getAddressListFromPref(c, "publickey", hdCoinId);
-        ArrayList<AddressInfo> addressInfos = getAddressListForOwnerFromPref(c, owner);
-        Log.e("keystorage", "addressInfos=" + addressInfos.size());
         byte[] encData = null;
         byte[] iv = null;
-        SharedPreferences prefs = getPref(c);
-        if (prefs.getString(getPrefKeyString("privatekeydata:", addressForKey), null) == null) {
-            publicKeys.put(keyIndex, address);
-            addressInfos.add(new AddressInfo(hdCoinId, keyIndex, address));
+        if (MainActivity.database.queryPrivateKeyEncrypted(addressForKey).getCount() == 0) {
             try {
                 EnCryptor enc = new EnCryptor();
                 encData = enc.encryptText(addressForKey, privateKey);
@@ -95,25 +80,14 @@ public class Utils {
             }
         }
 
-        // save the task list to preference
-        SharedPreferences.Editor editor = getPref(c).edit();
-        try {
-            editor.putString(getPrefKeyString("publickey", hdCoinId.toString()), ObjectSerializer.serialize(publicKeys));
-            editor.putString(getPrefKeyString("owner", owner), ObjectSerializer.serialize(addressInfos));
-            if (encData != null) {
-                editor.putString(getPrefKeyString("privatekeydata:", addressForKey), Base64.encodeToString(encData, Base64.DEFAULT));
-                editor.putString(getPrefKeyString("privatekeyiv:", addressForKey), Base64.encodeToString(iv, Base64.DEFAULT));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (encData != null && iv != null) {
+            MainActivity.database.insertPrivateKey(addressForKey, Base64.encodeToString(encData, Base64.DEFAULT), Base64.encodeToString(iv, Base64.DEFAULT));
+            addDataToContentProvider(hdCoinId, address, keyIndex, owner);
         }
-        editor.commit();
-
-        addDataToContentProvider(c, hdCoinId, address, keyIndex, owner);
     }
 
-    private static void addDataToContentProvider(Context c,Integer hdCoinId,  String address, Integer keyIndex, String owner) {
-        if (isKeyExistInContentProvider(c, address, owner))
+    private static void addDataToContentProvider(Integer hdCoinId,  String address, Integer keyIndex, String owner) {
+        if (isKeyExistInDatabase(address))
             return;
         ContentValues values = new ContentValues();
         values.put(KeyVaultContentProvider.PUBLICKEY, address);
@@ -125,102 +99,39 @@ public class Utils {
         KeyVaultContentProvider.myInsert(values);
     }
 
-    private static boolean isKeyExistInContentProvider(Context context, String address, String owner) {
-        String[] projection = {
-                KeyVaultContentProvider._ID,
-                KeyVaultContentProvider.PUBLICKEY,
-                KeyVaultContentProvider.KEYINDEX,
-                KeyVaultContentProvider.HDCOINID,
-                KeyVaultContentProvider.OWNER,
-        };
-
-        String selection = KeyVaultContentProvider.OWNER + " = ? AND " + KeyVaultContentProvider.PUBLICKEY + " = ?";
-        String[] selectionArg = { owner, address };
-        Cursor c = context.getContentResolver().query(CONTENT_URI, projection, selection, selectionArg, KeyVaultContentProvider.PUBLICKEY);
+    private static boolean isKeyExistInDatabase(String address) {
+        Cursor c = MainActivity.database.queryPrivateKeyEncrypted(address);
         if (c.getCount() == 1)
             return true;
         return false;
     }
 
-    private static void deleteAllPublicKeyInContentProvider(Context context) {
+    private static void deleteAllPublicKeyInContentProviderAndDatabase(Context context) {
         //context.getContentResolver().delete(CONTENT_URI, null, null);
         KeyVaultContentProvider.myDelete(null, null);
+        MainActivity.database.delete(KeystorageDatabase.PRIVATE_KEY_TABLE_NAME, null, null);
     }
 
-    public static HashMap<Integer, String> getAddressListFromPref(Context c, String prefix, Integer hdCoinId) {
-        HashMap<Integer, String> publicKeys = new HashMap<>();
-        SharedPreferences prefs = getPref(c);
-        try {
-            String str = prefs.getString(getPrefKeyString(prefix, hdCoinId.toString()), null);
-            if (str != null)
-                publicKeys = (HashMap<Integer, String>) ObjectSerializer.deserialize(str);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return publicKeys;
+    public static String getPublicAddressFromDatabase(Integer hdCoinId, String owner, int keyIndex) {
+        Cursor c = KeyVaultContentProvider.queryPublicAddress(owner, hdCoinId, keyIndex);
+        if(c.moveToNext())
+            return c.getString(c.getColumnIndex(KeyVaultContentProvider.PUBLICKEY));
+        else
+            return null;
     }
 
-    public static ArrayList<AddressInfo> getAddressListForOwnerFromPref(Context c, String owner) {
+    public static ArrayList<AddressInfo> getAddressListForOwnerFromDatabase(String owner) {
         ArrayList<AddressInfo> addressInfos = new ArrayList<>();
-        String str = getAddressListForOwnerFromPrefEncoded(c, owner);
-        try {
-            if (str != null) {
-                addressInfos = (ArrayList<AddressInfo>) ObjectSerializer.deserialize(str);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        Cursor c = KeyVaultContentProvider.queryPublicAddress(owner, -1, -1);
+        while(c.moveToNext()) {
+            AddressInfo addresInfo = new AddressInfo(c.getInt(c.getColumnIndex(KeyVaultContentProvider.HDCOINID)),
+                            c.getInt(c.getColumnIndex(KeyVaultContentProvider.KEYINDEX)),
+                            c.getString(c.getColumnIndex(KeyVaultContentProvider.PUBLICKEY)));
+            addressInfos.add(addresInfo);
         }
         return addressInfos;
     }
 
-    public static String getAddressListForOwnerFromPrefEncoded(Context c, String owner) {
-        SharedPreferences prefs = getPref(c);
-        String strEncoded = prefs.getString(getPrefKeyString("owner", owner), null);
-        if (strEncoded != null) {
-            try {
-                ArrayList<AddressInfo> addressInfos = (ArrayList<AddressInfo>) ObjectSerializer.deserialize(strEncoded);
-            } catch (ClassNotFoundException ex) {
-                // AddressInfo class changed
-                removeAllAccount(c);
-                strEncoded = null;
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-        return strEncoded;
-    }
-
-
-    public static void addIssuedCoins(Context c,Integer hdCoinId) {
-        ArrayList<Integer> issuedCoins = getIssuedCoinsFromPref(c);
-        if (null == issuedCoins) {
-            issuedCoins = new ArrayList<>();
-        }
-        if (!issuedCoins.contains(hdCoinId))
-            issuedCoins.add(hdCoinId);
-
-        // save the task list to preference
-        SharedPreferences.Editor editor = getPref(c).edit();
-        try {
-            editor.putString(c.getString(R.string.issuedCoins), ObjectSerializer.serialize(issuedCoins));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        editor.commit();
-    }
-
-    public static ArrayList<Integer> getIssuedCoinsFromPref(Context c) {
-        ArrayList<Integer> issuedCoins = new ArrayList<>();
-        SharedPreferences prefs = getPref(c);
-        try {
-            String str = prefs.getString(c.getString(R.string.issuedCoins), null);
-            if (str != null)
-                issuedCoins = (ArrayList<Integer>) ObjectSerializer.deserialize(str);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return issuedCoins;
-    }
 
     public static String decryptMasterSeed(Context c) {
         return decryptData(c, c.getString(R.string.master_seed), c.getString(R.string.encSeed), c.getString(R.string.ivSeed));
@@ -269,7 +180,7 @@ public class Utils {
             }
 
             editor.commit();
-            deleteAllPublicKeyInContentProvider(c);
+            deleteAllPublicKeyInContentProviderAndDatabase(c);
         }
     }
 
@@ -295,6 +206,6 @@ public class Utils {
         }
         editor.commit();
 
-        deleteAllPublicKeyInContentProvider(c);
+        deleteAllPublicKeyInContentProviderAndDatabase(c);
     }
 }
