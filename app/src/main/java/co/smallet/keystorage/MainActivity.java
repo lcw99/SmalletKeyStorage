@@ -350,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         dataStr = "";
                     else
                         dataInfoStr = data.getString("datainfo", "");
-                    String privateKey = Utils.getPrivateKey(main, from);
+                    String privateKey = Utils.getPrivateKey(from);
                     main.loadEtherOfflineSigner(privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr, dataInfoStr);
                     break;
                 case Constants.RETURN_TX:

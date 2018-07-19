@@ -148,9 +148,13 @@ public class Utils {
     private static String decryptData(Context c, String alias, String dataKey, String ivKey) {
         String encData = Utils.getPref(c).getString(dataKey, "");
         String iv = Utils.getPref(c).getString(ivKey, "");
+        return decryptData(alias, encData, iv);
+    }
+
+    private static String decryptData(String alias, String pkDataEnc, String pkIvEnc) {
         try {
             DeCryptor dec = new DeCryptor();
-            String retVal = dec.decryptData(alias, Base64.decode(encData, Base64.DEFAULT), Base64.decode(iv, Base64.DEFAULT));
+            String retVal = dec.decryptData(alias, Base64.decode(pkDataEnc, Base64.DEFAULT), Base64.decode(pkIvEnc, Base64.DEFAULT));
             return retVal;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -184,12 +188,14 @@ public class Utils {
         }
     }
 
-    public static String getPrefKeyString(String prefix, String data) {
-        return prefix + data;
-    }
-
-    public static String getPrivateKey(Context c, String address) {
-        return decryptData(c, address, getPrefKeyString("privatekeydata:", address), getPrefKeyString("privatekeyiv:", address));
+    public static String getPrivateKey(String address) {
+        Cursor c =MainActivity.database.queryPrivateKeyEncrypted(address);
+        if (c.moveToNext()) {
+            String pkDataEnc = c.getString(c.getColumnIndex(KeystorageDatabase.PRIVATE_KEY_DATA));
+            String pkIvEnc = c.getString(c.getColumnIndex(KeystorageDatabase.PRIVATE_KEY_IV));
+            return decryptData(address, pkDataEnc, pkIvEnc);
+        }
+        return null;
     }
 
     public static void removeAllAccount(Context c) {
