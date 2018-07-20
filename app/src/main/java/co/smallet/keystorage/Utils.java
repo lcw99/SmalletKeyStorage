@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Message;
@@ -50,6 +52,15 @@ public class Utils {
         Log.e("WebViewActivity", "UA: " + webView.getSettings().getUserAgentString());
 
         return webView;
+    }
+
+    public static int getVersionCode(Context c) {
+    try {
+            PackageInfo pInfo = c.getPackageManager().getPackageInfo(c.getPackageName(), 0);
+            return pInfo.versionCode;
+        } catch(PackageManager.NameNotFoundException e) {
+            return -1;
+        }
     }
 
     public static Integer getWordCount(String s) {

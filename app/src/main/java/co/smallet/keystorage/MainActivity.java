@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
@@ -39,18 +40,11 @@ import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.liquidplayer.service.MicroService;
-import org.liquidplayer.service.MicroService.ServiceStartListener;
-import org.liquidplayer.service.MicroService.EventListener;
-import org.liquidplayer.service.Synchronizer;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.Web3jFactory;
-import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
 
 import java.math.BigDecimal;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -62,11 +56,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Spinner spCoins;
     HashMap<Integer, Coin> coinList = null;
 
-    private TextView mTextMessage;
-
     KeyStorageService mKeyStorageService;
     boolean mBound = false;
-    Web3j web3j = null;
 
     String onStartAction;
     String callPackage;
@@ -78,6 +69,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SharedPreferences pref = Utils.getPref(this);
+        int versionNumberSaved = pref.getInt("version_number", -1);
+        int currentVersionNumber = Utils.getVersionCode(this);
+        if (versionNumberSaved != currentVersionNumber) { // new version first run case
+
+        }
+        pref.edit().putInt("version_number", currentVersionNumber).apply();
 
         main = this;
 
@@ -115,68 +114,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
 
         spCoins = findViewById(R.id.spCoins);
-
-        web3j = Web3jFactory.build(new HttpService("https://ropsten.infura.io/du9Plyu1xJErXebTWjsn"));
-
-        mTextMessage = findViewById(R.id.message);
-
-        final TextView textView = findViewById(R.id.text);
-        final Button button = findViewById(R.id.button);
-
-        // Our 'ready' listener will wait for a ready event from the micro service.  Once
-        // the micro service is ready, we'll ping it by emitting a "ping" event to the
-        // service.
-        final EventListener readyListener = new EventListener() {
-            @Override
-            public void onEvent(MicroService service, String event, JSONObject payload) {
-                service.emit("ping");
-            }
-        };
-
-        // Our micro service will respond to us with a "pong" event.  Embedded in that
-        // event is our message.  We'll update the textView with the message from the
-        // micro service.
-        final EventListener pongListener = new EventListener() {
-            @Override
-            public void onEvent(MicroService service, String event, final JSONObject payload) {
-                // NOTE: This event is typically called inside of the micro service's thread, not
-                // the main UI thread.  To update the UI, run this on the main thread.
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            textView.setText(payload.getString("message"));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            }
-        };
-
-        // Our start listener will set up our event listeners once the micro service Node.js
-        // environment is set up
-        final ServiceStartListener startListener = new ServiceStartListener() {
-            @Override
-            public void onStart(MicroService service, Synchronizer synchronizer) {
-                service.addEventListener("ready", readyListener);
-                service.addEventListener("pong", pongListener);
-            }
-        };
-
-        // When our button is clicked, we will launch a new instance of our micro service.
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    URI uri = new URI("android.resource://co.smallet.keystorage/raw/service");
-                    MicroService service = new MicroService(MainActivity.this, uri, startListener);
-                    service.start();
-                } catch (URISyntaxException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
 
         if (coinList == null) {
             if (!Utils.isMasterKeyExist(this)) {
