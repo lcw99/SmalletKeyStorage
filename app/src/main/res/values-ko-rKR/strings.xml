@@ -48,8 +48,8 @@
     <string name="login">로그인</string>
     <string name="password_do_not_match">패스워드가 일치 하지 않습니다.</string>
     <string name="number_of_seed_message">시드의 단어수는 12, 15, 18, 21, 24 중 하나여야 합니다.</string>
-    <string name="confirm_transaction_title">트랜잭션 사인</string>
-    <string name="confirm_button">지불확인</string>
-    <string name="reject_button">거부</string>
+    <string name="confirm_transaction_title">거래 사인</string>
+    <string name="confirm_button">거래사인</string>
+    <string name="reject_button">사인거부</string>
 
 </resources>
