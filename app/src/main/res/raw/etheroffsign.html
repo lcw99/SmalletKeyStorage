@@ -43117,18 +43117,22 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 });
 //# sourceMappingURL=web3.js.map</script>
         <script>
-            function signTransactionOffline(privateKey, to, value, chainId, nonce, gasPrice, gasLimits, data) {
+            function signTransactionOffline(from, privateKey, to, value, chainId, nonce, gasPrice, gasLimits, data) {
                 var web3 = new Web3();
                 var account = web3.eth.accounts.privateKeyToAccount(privateKey);
-                account.signTransaction({
-                    to: to,
+                var txObj = {
                     value: value,
                     gas: gasLimits,
                     gasPrice: gasPrice,
                     nonce: nonce,
                     chainId: chainId,
                     data: data
-                }).then(function(tx) {
+                };
+                if (to != "ContractCreation")
+                    txObj.to = to;
+                else
+                    txObj.from = from;
+                account.signTransaction(txObj).then(function(tx) {
                     console.log(tx.rawTransaction);
                     window.JSInterface.txReady(tx.rawTransaction);
                 });

@@ -61,6 +61,7 @@
                 android:id="@+id/twOtherInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:lines="10"
                 android:text="Info" />
         </LinearLayout>
 

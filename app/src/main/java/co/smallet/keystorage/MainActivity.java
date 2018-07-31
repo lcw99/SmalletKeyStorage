@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    public void loadEtherOfflineSigner(final String privateKey, final String to, final String value, final int chainId, final String nonce, final String gasPrice, final String gasLimits, final String dataStr, final String dataInfoStr) {
+    public void loadEtherOfflineSigner(final String from, final String privateKey, final String to, final String value, final int chainId, final String nonce, final String gasPrice, final String gasLimits, final String dataStr, final String dataInfoStr) {
         // custom dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
@@ -213,6 +213,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 webView.setWebViewClient(new WebViewClient() {
                     public void onPageFinished(WebView view, String url) {
                         String scriptParam = "signTransactionOffline(" +
+                                "'" + from +"'," +
                                 "'" + privateKey +"'," +
                                 "'" + to +"'," +
                                 "'" + value +"'," +
@@ -288,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     else
                         dataInfoStr = data.getString("datainfo", "");
                     String privateKey = Utils.getPrivateKey(from);
-                    main.loadEtherOfflineSigner(privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr, dataInfoStr);
+                    main.loadEtherOfflineSigner(from, privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr, dataInfoStr);
                     break;
                 case Constants.RETURN_TX:
                     main.mKeyStorageService.returnRawTxToWalletService(msg.getData());
