@@ -43117,7 +43117,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 });
 //# sourceMappingURL=web3.js.map</script>
         <script>
-            function signTransactionOffline(from, privateKey, to, value, chainId, nonce, gasPrice, gasLimits, data) {
+            function signTransactionOffline(from, privateKey, to, value, chainId, nonce, gasPrice, gasLimits, data, extra) {
                 var web3 = new Web3();
                 var account = web3.eth.accounts.privateKeyToAccount(privateKey);
                 var txObj = {
@@ -43134,7 +43134,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
                     txObj.from = from;
                 account.signTransaction(txObj).then(function(tx) {
                     console.log(tx.rawTransaction);
-                    window.JSInterface.txReady(tx.rawTransaction);
+                    window.JSInterface.txReady(tx.rawTransaction, extra);
                 });
             }
         </script>

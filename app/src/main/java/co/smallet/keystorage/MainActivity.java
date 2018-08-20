@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    public void loadEtherOfflineSigner(final String from, final String privateKey, final String to, final String value, final int chainId, final String nonce, final String gasPrice, final String gasLimits, final String dataStr, final String dataInfoStr) {
+    public void loadEtherOfflineSigner(final String from, final String privateKey, final String to, final String value, final int chainId, final String nonce, final String gasPrice, final String gasLimits, final String dataStr, final String dataInfoStr, final String extra) {
         // custom dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
@@ -221,7 +221,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 "" + nonce +"," +
                                 "'" + gasPrice +"'," +
                                 "'" + gasLimits +"'," +
-                                "'" + dataStr +"'"
+                                "'" + dataStr +"'," +
+                                "'" + extra +"'"
                                 +");";
                         Log.e("lcw", scriptParam);
                         webView.evaluateJavascript(scriptParam, new ValueCallback<String>() {
@@ -249,12 +250,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         @JavascriptInterface
-        public void txReady(String txRaw) {
+        public void txReady(String txRaw, String extra) {
             Log.e("webview", "tx = " + txRaw);
             Message msg = new Message();
             msg.what = Constants.RETURN_TX;
             Bundle data = new Bundle();
             data.putString("txRaw", txRaw);
+            data.putString("extra", extra);
             msg.setData(data);
 
             mHandle.sendMessage(msg);
@@ -282,6 +284,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String gasPrice = data.getString("gasPrice");
                     String gasLimits = data.getString("gasLimits");
                     String dataStr = data.getString("data");
+                    String extra = data.getString("extra");
                     Log.e("keystorage", "from=" + from + ", to=" + to);
                     String dataInfoStr = "";
                     if (dataStr == null)
@@ -289,7 +292,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     else
                         dataInfoStr = data.getString("datainfo", "");
                     String privateKey = Utils.getPrivateKey(from);
-                    main.loadEtherOfflineSigner(from, privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr, dataInfoStr);
+                    main.loadEtherOfflineSigner(from, privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr, dataInfoStr, extra);
                     break;
                 case Constants.RETURN_TX:
                     main.mKeyStorageService.returnRawTxToWalletService(msg.getData());
