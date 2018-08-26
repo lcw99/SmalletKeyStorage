@@ -224,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 "'" + dataStr +"'," +
                                 "'" + extra +"'"
                                 +");";
-                        Log.e("lcw", scriptParam);
+                        //Log.e("lcw", scriptParam);
                         webView.evaluateJavascript(scriptParam, new ValueCallback<String>() {
                             @Override
                             public void onReceiveValue(String s) {

@@ -43120,6 +43120,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             function signTransactionOffline(from, privateKey, to, value, chainId, nonce, gasPrice, gasLimits, data, extra) {
                 var web3 = new Web3();
                 var account = web3.eth.accounts.privateKeyToAccount(privateKey);
+                if (to == "SignMessage") {
+                    var signedObj = account.sign(data);
+                    console.log(signedObj.signature);
+                    window.JSInterface.txReady(signedObj.signature, extra);
+                    return;
+                }
+
                 var txObj = {
                     value: value,
                     gas: gasLimits,
