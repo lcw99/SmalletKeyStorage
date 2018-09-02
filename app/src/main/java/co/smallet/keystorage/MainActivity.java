@@ -195,7 +195,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Message msg = new Message();
                 msg.what = Constants.RETURN_TX;
                 Bundle data = new Bundle();
-                data.putString("txRaw", "rejected");
+                data.putString("txRaw", "error:rejected");
+                data.putString("extra", extra);
                 msg.setData(data);
                 mHandle.sendMessage(msg);
             }
@@ -301,6 +302,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     webView.setWebChromeClient(null);
                     webView.setWebViewClient(null);
                     webView.loadUrl("about:blank");
+                    main.finish();
                     break;
                 case Constants.GENERATE_ADDRESS:
                     int hdCoinCode = msg.getData().getInt("hdCoinCode");
