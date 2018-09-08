@@ -51,5 +51,10 @@
     <string name="confirm_transaction_title">거래 사인</string>
     <string name="confirm_button">거래사인</string>
     <string name="reject_button">사인거부</string>
+    <string name="finish_key_vault_after_sign">사인 완료후 키 볼트 종료</string>
+    <string name="auth_required">인증요청</string>
+    <string name="auth_required_desc">폰에 설정된 암호, 핀, 패턴, 지문 등으로 인증 해 주세요.</string>
+    <string name="finish_after_sign_desc">이 기능을 끄면 사인 절차 마다 인증을 하지 않아도 됩니다. 첫 실행시에만 인증을 하면 됩니다.</string>
+    <string name="auth_failed">인증에 실패 하였습니다.</string>
 
 </resources>

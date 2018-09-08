@@ -25,6 +25,7 @@ public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
     private static final int REQUEST_SIGNUP = 0;
 
+    private String loginType;
     @BindView(R.id.input_password) EditText _passwordText;
     @BindView(R.id.btn_login) Button _loginButton;
     @BindView(R.id.link_signup) TextView _signupLink;
@@ -35,6 +36,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
 
+        loginType = getIntent().getStringExtra("loginType");
         _loginButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -72,10 +74,13 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
+        setResult(RESULT_OK);
         finish();
 
-        Intent intent = new Intent(getApplicationContext(), SignupActivity.class);
-        startActivity(intent);
+        if (!loginType.equals("loginOnly")) {
+            Intent intent = new Intent(getApplicationContext(), SignupActivity.class);
+            startActivity(intent);
+        }
     }
 
 

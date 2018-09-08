@@ -192,7 +192,7 @@ public class KeyStorageService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Toast.makeText(this, "KeyStorage service starting", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "KeyStorage service starting", Toast.LENGTH_SHORT).show();
 
         // For each start request, send a message to start a job and deliver the
         // start ID so we know which request we're stopping when we finish the job
@@ -217,7 +217,7 @@ public class KeyStorageService extends Service {
     public void onDestroy() {
         isServiceRunning = false;
         main = null;
-        Toast.makeText(this, "KeyStorage  service done", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "KeyStorage  service done", Toast.LENGTH_SHORT).show();
     }
 
     //returns the instance of the service

@@ -139,5 +139,10 @@
     <string name="confirm_transaction_title">Confirm Transaction</string>
     <string name="confirm_button">Confirm</string>
     <string name="reject_button">Reject</string>
+    <string name="finish_key_vault_after_sign">Finish key vault after sign</string>
+    <string name="auth_required">Authentication required</string>
+    <string name="auth_required_desc">Please verify the password or PIN or pattern or fingerprint you set on Phone.</string>
+    <string name="finish_after_sign_desc">If you turn this off, you do not need to authenticate every sign-off. You only need to authenticate on the first run.</string>
+    <string name="auth_failed">Failure: Unable to verify user\'s identity</string>
 
 </resources>

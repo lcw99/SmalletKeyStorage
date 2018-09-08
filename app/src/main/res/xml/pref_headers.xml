@@ -1,6 +1,10 @@
 <preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- These settings headers are only used on tablets. -->
+    <header
+        android:fragment="co.smallet.keystorage.SettingsActivity$GeneralPreferenceFragment"
+        android:icon="@drawable/ic_info_black_24dp"
+        android:title="@string/pref_header_general" />
 
     <header
         android:fragment="co.smallet.keystorage.SettingsActivity$SupportPreferenceFragment"
@@ -8,10 +12,6 @@
         android:title="@string/support" />
 
     <!--
-    <header
-        android:fragment="co.smallet.keystorage.SettingsActivity$GeneralPreferenceFragment"
-        android:icon="@drawable/ic_info_black_24dp"
-        android:title="@string/pref_header_general" />
 
     <header
         android:fragment="co.smallet.keystorage.SettingsActivity$NotificationPreferenceFragment"

@@ -2,6 +2,7 @@ package co.smallet.keystorage;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.KeyguardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -14,6 +15,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -55,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static MainActivity main;
     Spinner spCoins;
     HashMap<Integer, Coin> coinList = null;
+    private static int CODE_AUTHENTICATION_VERIFICATION = 241;
 
     KeyStorageService mKeyStorageService;
     boolean mBound = false;
@@ -64,6 +67,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String callClass;
 
     static public KeystorageDatabase database;
+
+    boolean finishAfterSign;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +82,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
         pref.edit().putInt("version_number", currentVersionNumber).apply();
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        finishAfterSign = sharedPref.getBoolean("finish_after_sign", true);
+
+        KeyguardManager km = (KeyguardManager)getSystemService(KEYGUARD_SERVICE);
+        if(km.isKeyguardSecure()) {
+            Intent i = km.createConfirmDeviceCredentialIntent(getString(R.string.auth_required),
+                    getString(R.string.auth_required_desc));
+            startActivityForResult(i, CODE_AUTHENTICATION_VERIFICATION);
+        }
+        else {
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.putExtra("loginType", "loginOnly");
+            startActivityForResult(intent, CODE_AUTHENTICATION_VERIFICATION);
+        }
 
         main = this;
 
@@ -124,6 +144,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         } else
             showPublicKeys();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode==RESULT_OK && requestCode==CODE_AUTHENTICATION_VERIFICATION)
+        {
+            //Toast.makeText(this, "Success: Verified user's identity", Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            Toast.makeText(this, R.string.auth_failed, Toast.LENGTH_LONG).show();
+            finish();
+        }
     }
 
     @Override
@@ -302,7 +336,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     webView.setWebChromeClient(null);
                     webView.setWebViewClient(null);
                     webView.loadUrl("about:blank");
-                    main.finish();
+                    if (main.finishAfterSign)
+                        main.finish();
                     break;
                 case Constants.GENERATE_ADDRESS:
                     int hdCoinCode = msg.getData().getInt("hdCoinCode");
