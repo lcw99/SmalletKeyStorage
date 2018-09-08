@@ -48,13 +48,13 @@
     <string name="login">로그인</string>
     <string name="password_do_not_match">패스워드가 일치 하지 않습니다.</string>
     <string name="number_of_seed_message">시드의 단어수는 12, 15, 18, 21, 24 중 하나여야 합니다.</string>
-    <string name="confirm_transaction_title">거래 사인</string>
-    <string name="confirm_button">거래사인</string>
-    <string name="reject_button">사인거부</string>
-    <string name="finish_key_vault_after_sign">사인 완료후 키 볼트 종료</string>
+    <string name="confirm_transaction_title">거래요청 검토</string>
+    <string name="confirm_button">거래승인</string>
+    <string name="reject_button">서명거부</string>
+    <string name="finish_key_vault_after_sign">서명 완료 후 키 볼트 종료</string>
     <string name="auth_required">인증요청</string>
     <string name="auth_required_desc">폰에 설정된 암호, 핀, 패턴, 지문 등으로 인증 해 주세요.</string>
-    <string name="finish_after_sign_desc">이 기능을 끄면 사인 절차 마다 인증을 하지 않아도 됩니다. 첫 실행시에만 인증을 하면 됩니다.</string>
+    <string name="finish_after_sign_desc">이 기능을 끄면 서명 절차 마다 인증을 하지 않아도 됩니다. 첫 실행시에만 인증을 하면 됩니다.</string>
     <string name="auth_failed">인증에 실패 하였습니다.</string>
 
 </resources>
