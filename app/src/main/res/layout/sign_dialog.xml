@@ -77,7 +77,6 @@
                 android:layout_height="wrap_content"
                 android:text="@string/confirm_button"
                 android:drawableStart="@drawable/ic_write_pen"
-                android:textColor="@android:color/holo_green_dark"
                 android:textStyle="bold"
                 android:layout_weight="1"
                 />
@@ -87,7 +86,6 @@
                 android:layout_height="wrap_content"
                 android:text="@string/reject_button"
                 android:drawableStart="@drawable/ic_error_red"
-                android:textColor="@color/aluminum"
                 android:textStyle="bold"
                 android:layout_weight="1"
                 />
