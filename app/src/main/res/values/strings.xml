@@ -135,7 +135,7 @@
     <string name="number_of_seed_message">number of words in the seed word must be 12, 15, 18, 21 or 24.</string>
     <string name="account_creation_failed">Account creation failed</string>
     <string name="enter_valid_seed_words">enter valid seed words</string>
-    <string name="no_master_seed_yet_create_one">No MASTER SEED yet? Create one</string>
+    <string name="no_master_seed_yet_create_one">Create new Master Seed</string>
     <string name="confirm_transaction_title">Confirm Transaction</string>
     <string name="confirm_button">Confirm</string>
     <string name="reject_button">Reject</string>
@@ -144,5 +144,6 @@
     <string name="auth_required_desc">Please verify the password or PIN or pattern or fingerprint you set on Phone.</string>
     <string name="finish_after_sign_desc">If you turn this off, you do not need to authenticate every sign-off. You only need to authenticate on the first run.</string>
     <string name="auth_failed">Failure: Unable to verify user\'s identity</string>
+    <string name="login_failed_toast">Login failed</string>
 
 </resources>
