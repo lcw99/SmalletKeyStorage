@@ -42,8 +42,13 @@ import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.Sign;
+import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.utils.Convert;
+import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -241,6 +246,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onClick(View v) {
                 dialog.dismiss();
+
+                if (to.equals("SignMessageRaw")) {
+                    Credentials creds = Credentials.create(privateKey);
+                    Sign.SignatureData signed = Sign.signMessage(Numeric.hexStringToByteArray(dataStr), creds.getEcKeyPair(), false);
+                    String encoded = Numeric.toHexString(signed.getR()) + Numeric.toHexString(signed.getS()).substring(2) + Integer.toHexString(signed.getV());
+
+                    Message msg = new Message();
+                    msg.what = Constants.RETURN_TX;
+                    Bundle data = new Bundle();
+                    data.putString("txRaw", encoded);
+                    Log.e("keystorage", encoded);
+                    data.putString("extra", extra);
+                    msg.setData(data);
+                    mHandle.sendMessage(msg);
+                    return;
+                }
+
+
                 final WebView webView= Utils.initWebView((WebView)findViewById(R.id.webview2));
                 JavaScriptInterfaceEtherOffSign jsInterface = new JavaScriptInterfaceEtherOffSign(main, webView);
                 webView.addJavascriptInterface(jsInterface, "JSInterface");
