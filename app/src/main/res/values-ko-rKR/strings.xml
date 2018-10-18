@@ -58,5 +58,7 @@
     <string name="finish_after_sign_desc">이 기능을 끄면 서명 절차 마다 인증을 하지 않아도 됩니다. 첫 실행시에만 인증을 하면 됩니다.</string>
     <string name="auth_failed">인증에 실패 하였습니다.</string>
     <string name="login_failed_toast">로그인 실패</string>
+    <string name="smallet_key_vault_title">스몰렛 키 볼트</string>
+    <string name="key_valult_service_unlocked_message">잠금 해제 상태. 앱을 종료하면 볼트가 잠깁니다.</string>
 
 </resources>

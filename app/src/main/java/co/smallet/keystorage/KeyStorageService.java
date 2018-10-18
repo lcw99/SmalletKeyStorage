@@ -257,8 +257,8 @@ public class KeyStorageService extends Service {
         }
 
         Notification.Builder builder = new Notification.Builder(this)
-                .setContentTitle("Key Vault Service")
-                .setContentText("Safely started.")
+                .setContentTitle(getString(R.string.smallet_key_vault_title))
+                .setContentText(getString(R.string.key_valult_service_unlocked_message))
                 .setSmallIcon(R.drawable.ic_stat_key_storage_vec)
                 .setLargeIcon(icon)
                 .setContentIntent(contentPendingIntent)

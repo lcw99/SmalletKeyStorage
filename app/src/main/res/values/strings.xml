@@ -145,5 +145,7 @@
     <string name="finish_after_sign_desc">If you turn this off, you do not need to authenticate every sign-off. You only need to authenticate on the first run.</string>
     <string name="auth_failed">Failure: Unable to verify user\'s identity</string>
     <string name="login_failed_toast">Login failed</string>
+    <string name="smallet_key_vault_title">Smallet Key Vault</string>
+    <string name="key_valult_service_unlocked_message">Vault unlocked, finish app to lock vault.</string>
 
 </resources>
