@@ -10,6 +10,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -27,6 +30,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,10 +39,17 @@ import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.webkit.WebView;
 import android.widget.Toast;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -55,10 +66,13 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import co.smallet.keystorage.PublicKeysAdapter.ClickListener;
 import co.smallet.keystorage.database.KeystorageDatabase;
 import co.smallet.smalletandroidlibrary.AddressInfo;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+    static public Integer coinHdCodeETH = 60;        // ETH
+
     public static MainActivity main;
     Spinner spCoins;
     HashMap<Integer, Coin> coinList = null;
@@ -91,16 +105,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         finishAfterSign = sharedPref.getBoolean("finish_after_sign", true);
 
-        KeyguardManager km = (KeyguardManager)getSystemService(KEYGUARD_SERVICE);
-        if(km.isKeyguardSecure()) {
-            Intent i = km.createConfirmDeviceCredentialIntent(getString(R.string.auth_required),
-                    getString(R.string.auth_required_desc));
-            startActivityForResult(i, CODE_AUTHENTICATION_VERIFICATION);
-        }
-        else {
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.putExtra("loginType", "loginOnly");
-            startActivityForResult(intent, CODE_AUTHENTICATION_VERIFICATION);
+        if (!BuildConfig.DEBUG) {
+            KeyguardManager km = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+            if (km.isKeyguardSecure()) {
+                Intent i = km.createConfirmDeviceCredentialIntent(getString(R.string.auth_required),
+                        getString(R.string.auth_required_desc));
+                startActivityForResult(i, CODE_AUTHENTICATION_VERIFICATION);
+            } else {
+                Intent intent = new Intent(this, LoginActivity.class);
+                intent.putExtra("loginType", "loginOnly");
+                startActivityForResult(intent, CODE_AUTHENTICATION_VERIFICATION);
+            }
         }
 
         main = this;
@@ -440,10 +455,57 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     };
 
+    PublicKeysAdapter publicKeysAdapter;
+
     private void showPublicKeys() {
         if (coinList == null)
             return;
-        PublicKeysAdapter publicKeysAdapter = new PublicKeysAdapter(this);
+        publicKeysAdapter = new PublicKeysAdapter(this, new ClickListener() {
+            @Override
+            public void onItemClicked(int position) {
+                String publicKey = publicKeysAdapter.getItemPublicKey(position);
+                AlertDialog.Builder builder = new AlertDialog.Builder(main);
+                LayoutInflater inflater = main.getLayoutInflater();
+                final View dialogView = inflater.inflate(R.layout.qrcode_dialog, null);
+                builder.setTitle(R.string.public_key);
+
+                builder.setView(dialogView);
+                final Dialog dialog = builder.create();
+
+                JSONObject qrJson = new JSONObject();
+                try {
+                    qrJson.put("type", "publicKeyETH");
+                    qrJson.put("publicKeyETH", publicKey);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                String qrText = qrJson.toString();
+
+                QRCodeWriter writer = new QRCodeWriter();
+                try {
+                    Display display = getWindowManager().getDefaultDisplay();
+                    Point size = new Point();
+                    display.getSize(size);
+                    int width = size.x;
+
+                    BitMatrix bitMatrix = writer.encode(qrText, BarcodeFormat.QR_CODE, width - 100, width - 100);
+                    BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+                    Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
+                    ((ImageView) dialogView.findViewById(R.id.ivPublicAddressQR)).setImageBitmap(bitmap);
+
+                } catch (WriterException e) {
+                    e.printStackTrace();
+                }
+
+                dialog.show();
+            }
+
+            @Override
+            public void onItemLongClicked(int position) {
+
+            }
+        });
         ArrayList<AddressInfo> addressInfos = Utils.getAddressListForOwnerFromDatabase(null);
 
         for (AddressInfo ai : addressInfos) {
@@ -500,6 +562,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (id == R.id.nav_master_seed) {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
+        } else  if (id == R.id.nav_add_account) {
+            generateAddress(coinHdCodeETH, publicKeysAdapter.getItemCount(), getPackageName(), false);
         } else if (id == R.id.nav_remove_all_account) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppTheme_Dark_Dialog);
             builder.setTitle(R.string.remove_all_account_dialog_title)

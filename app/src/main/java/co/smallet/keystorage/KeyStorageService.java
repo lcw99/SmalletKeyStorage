@@ -237,8 +237,8 @@ public class KeyStorageService extends Service {
 
         Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
         notificationIntent.setAction(Constants.ACTION_MAIN);  // A string containing the action name
-        notificationIntent.setFlags(FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent contentPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
         Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_stat_key_storage_vec);
 

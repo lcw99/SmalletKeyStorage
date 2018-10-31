@@ -6,8 +6,8 @@ android {
         applicationId "co.smallet.keystorage"
         minSdkVersion 23
         targetSdkVersion 27
-        versionCode 36
-        versionName "0.7.3.36"
+        versionCode 37
+        versionName "0.7.4.37"
         testInstrumentationRunner "android.support.metamask.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
@@ -49,4 +49,6 @@ dependencies {
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
     api 'com.google.guava:guava:25.1-android'
     implementation project(':smalletandroidlibrary')
+    implementation 'com.google.zxing:core:3.3.0'
+    implementation 'com.journeyapps:zxing-android-embedded:3.2.0@aar'
 }

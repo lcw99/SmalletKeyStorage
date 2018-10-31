@@ -60,5 +60,7 @@
     <string name="login_failed_toast">로그인 실패</string>
     <string name="smallet_key_vault_title">스몰렛 키 볼트</string>
     <string name="key_valult_service_unlocked_message">잠금 해제 상태. 앱을 종료하면 볼트가 잠깁니다.</string>
+    <string name="public_key">공개키</string>
+    <string name="add_account">계정추가</string>
 
 </resources>

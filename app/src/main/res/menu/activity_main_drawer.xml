@@ -9,6 +9,10 @@
             android:icon="@drawable/ic_menu_master_seed"
             android:title="@string/drawer_master_seed" />
         <item
+            android:id="@+id/nav_add_account"
+            android:icon="@drawable/ic_menu_plus"
+            android:title="@string/add_account" />
+        <item
             android:id="@+id/nav_remove_all_account"
             android:icon="@drawable/ic_menu_remove_all_account"
             android:title="@string/remove_all_account" />

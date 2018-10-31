@@ -9,23 +9,27 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 public class PublicKeysAdapter extends Adapter<PublicKeysAdapter.ViewHolder> {
     LayoutInflater inflater;
     ArrayList<PublicKey> publicKeys = new ArrayList<>();
+    private final ClickListener listener;
 
-    public PublicKeysAdapter(Context context){
+    public PublicKeysAdapter(Context context, ClickListener listener) {
         inflater = LayoutInflater.from(context);
+        this.listener = listener;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view =inflater.inflate(R.layout.item_public_key,parent,false);
-        ViewHolder holder = new ViewHolder(view);
+        ViewHolder holder = new ViewHolder(view, this.listener);
         return holder;
     }
 
@@ -43,30 +47,45 @@ public class PublicKeysAdapter extends Adapter<PublicKeysAdapter.ViewHolder> {
         return publicKeys.size();
     }
 
+    public String getItemPublicKey(int position) {
+        return publicKeys.get(position).getPublicKey();
+    }
+
     public void addPublicKey(String coinType, Integer keyIndex, String publicKey, Integer image) {
         publicKeys.add(new PublicKey(coinType, keyIndex, publicKey, image));
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        // Your holder should contain a member variable
-        // for any view that will be set as you render a row
+        private WeakReference<ClickListener> listenerRef;
+        public LinearLayout llPublicKey;
         public TextView twCoinType;
-        //public TextView twKeyIndex;
         public TextView twPublicKey;
         public ImageView coinImage;
 
-        // We also create a constructor that accepts the entire item row
-        // and does the view lookups to find each subview
-        public ViewHolder(View itemView) {
-            // Stores the itemView in a public final member variable that can be used
-            // to access the context from any ViewHolder instance.
+        public ViewHolder(View itemView, ClickListener listener)
+        {
             super(itemView);
 
+            listenerRef = new WeakReference<>(listener);
+
+            llPublicKey = itemView.findViewById(R.id.llPublicKey);
             twCoinType = itemView.findViewById(R.id.text_coinType);
             //twKeyIndex = (TextView) itemView.findViewById(R.id.text_keyIndex);
             twPublicKey = itemView.findViewById(R.id.text_public_key);
             coinImage = itemView.findViewById(R.id.coin_image);
 
+            llPublicKey.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    listenerRef.get().onItemClicked(getAdapterPosition());
+                }
+            });
         }
     }
+
+    public interface ClickListener {
+        void onItemClicked(int position);
+        void onItemLongClicked(int position);
+    }
+
 }
