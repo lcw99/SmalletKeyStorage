@@ -16,6 +16,10 @@
             android:id="@+id/nav_remove_all_account"
             android:icon="@drawable/ic_menu_remove_all_account"
             android:title="@string/remove_all_account" />
+        <item
+            android:id="@+id/nav_scan_QR_code"
+            android:icon="@drawable/ic_menu_camera_big"
+            android:title="@string/scan_qr_code" />
     </group>
 
     <item android:title="Communicate">

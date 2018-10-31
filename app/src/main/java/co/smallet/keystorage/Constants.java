@@ -14,4 +14,5 @@ public class Constants {
     public static final String ACTION_MAIN = "co.smallet.keystorage.ACTION_MAIN";
     public static final String PREFS_ADDRESS = "co.smallet.keystorage.PREFS_ADDRESS";
 
+    public static final String QR_CODE = "qrcode";
 }

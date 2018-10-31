@@ -149,5 +149,6 @@
     <string name="key_valult_service_unlocked_message">Vault unlocked, finish app to lock vault.</string>
     <string name="public_key">Public Key</string>
     <string name="add_account">Add Account</string>
+    <string name="scan_qr_code">Scan QR Code</string>
 
 </resources>

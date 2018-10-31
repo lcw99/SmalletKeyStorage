@@ -48,6 +48,8 @@ import android.widget.Toast;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
@@ -65,10 +67,13 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 
 import co.smallet.keystorage.PublicKeysAdapter.ClickListener;
 import co.smallet.keystorage.database.KeystorageDatabase;
 import co.smallet.smalletandroidlibrary.AddressInfo;
+import co.smallet.smalletandroidlibrary.GlobalConstants;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     static public Integer coinHdCodeETH = 60;        // ETH
@@ -168,16 +173,55 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode==RESULT_OK && requestCode==CODE_AUTHENTICATION_VERIFICATION)
-        {
-            //Toast.makeText(this, "Success: Verified user's identity", Toast.LENGTH_SHORT).show();
+        if (requestCode==CODE_AUTHENTICATION_VERIFICATION) {
+            super.onActivityResult(requestCode, resultCode, data);
+            if (resultCode == RESULT_OK ) {
+                //Toast.makeText(this, "Success: Verified user's identity", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.auth_failed, Toast.LENGTH_LONG).show();
+                finish();
+            }
+            return;
         }
-        else
-        {
-            Toast.makeText(this, R.string.auth_failed, Toast.LENGTH_LONG).show();
-            finish();
+
+        if (requestCode != IntentIntegrator.REQUEST_CODE) {
+            // This is important, otherwise the result will not be passed to the fragment
+            super.onActivityResult(requestCode, resultCode, data);
+            return;
         }
+
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        String resultStr = result.getContents();
+        if(resultStr == null) {
+            Log.d("MainActivity", "Cancelled scan");
+            Toast.makeText(this, "Scan cancelled", Toast.LENGTH_LONG).show();
+        } else {
+            Log.d("MainActivity", "Scanned");
+
+            if (resultStr.startsWith("{")) {
+                try {
+                    JSONObject qrJson = new JSONObject(resultStr);
+                    int action = qrJson.getInt("action");
+                    if (action == GlobalConstants.SERVICE_SIGN_TX) {
+                        Bundle bundle = new Bundle();
+                        Iterator iter = qrJson.keys();
+                        while(iter.hasNext()){
+                            String key = (String)iter.next();
+                            String value = qrJson.getString(key);
+                            bundle.putString(key,value);
+                        }
+                        bundle.putString("extra", Constants.QR_CODE);
+                        Message msgToSend = new Message();
+                        msgToSend.what = Constants.SIGN_TX;
+                        msgToSend.setData(bundle);
+                        mHandle.sendMessageDelayed(msgToSend, 500);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
     }
 
     @Override
@@ -368,6 +412,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     main.loadEtherOfflineSigner(from, privateKey, to, value, chainId, nonce, gasPrice, gasLimits, dataStr, dataInfoStr, extra);
                     break;
                 case Constants.RETURN_TX:
+                    extra = msg.getData().getString("extra");
+                    if (extra != null && extra.equals(Constants.QR_CODE)) {
+                        data = msg.getData();
+                        JSONObject json = new JSONObject();
+                        Set<String> keys = data.keySet();
+                        try {
+                            for (String key : keys) {
+                                json.put(key, JSONObject.wrap(data.get(key)));
+                            }
+                            json.put("type", "signedTransaction");
+                            String jsonStr = json.toString();
+                            showQRCode(jsonStr, "Signed Transaction");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    }
                     main.mKeyStorageService.returnRawTxToWalletService(msg.getData());
 
                     final WebView webView = main.findViewById(R.id.webview2);
@@ -464,13 +525,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onItemClicked(int position) {
                 String publicKey = publicKeysAdapter.getItemPublicKey(position);
-                AlertDialog.Builder builder = new AlertDialog.Builder(main);
-                LayoutInflater inflater = main.getLayoutInflater();
-                final View dialogView = inflater.inflate(R.layout.qrcode_dialog, null);
-                builder.setTitle(R.string.public_key);
-
-                builder.setView(dialogView);
-                final Dialog dialog = builder.create();
 
                 JSONObject qrJson = new JSONObject();
                 try {
@@ -482,23 +536,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 String qrText = qrJson.toString();
 
-                QRCodeWriter writer = new QRCodeWriter();
-                try {
-                    Display display = getWindowManager().getDefaultDisplay();
-                    Point size = new Point();
-                    display.getSize(size);
-                    int width = size.x;
-
-                    BitMatrix bitMatrix = writer.encode(qrText, BarcodeFormat.QR_CODE, width - 100, width - 100);
-                    BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-                    Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
-                    ((ImageView) dialogView.findViewById(R.id.ivPublicAddressQR)).setImageBitmap(bitmap);
-
-                } catch (WriterException e) {
-                    e.printStackTrace();
-                }
-
-                dialog.show();
+                showQRCode(qrText, getString(R.string.public_key));
             }
 
             @Override
@@ -518,6 +556,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         RecyclerView rvPublicKeys = findViewById(R.id.rvPublicKeys);
         rvPublicKeys.setAdapter(publicKeysAdapter);
         rvPublicKeys.setLayoutManager(new LinearLayoutManager(this));
+    }
+
+    private static  void showQRCode(String qrText, String title) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(main);
+        LayoutInflater inflater = main.getLayoutInflater();
+        final View dialogView = inflater.inflate(R.layout.qrcode_dialog, null);
+        builder.setTitle(title);
+
+        builder.setView(dialogView);
+        final Dialog dialog = builder.create();
+
+        QRCodeWriter writer = new QRCodeWriter();
+        try {
+            Display display = main.getWindowManager().getDefaultDisplay();
+            Point size = new Point();
+            display.getSize(size);
+            int width = size.x;
+
+            BitMatrix bitMatrix = writer.encode(qrText, BarcodeFormat.QR_CODE, width - 100, width - 100);
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
+            ((ImageView) dialogView.findViewById(R.id.ivPublicAddressQR)).setImageBitmap(bitmap);
+
+        } catch (WriterException e) {
+            e.printStackTrace();
+        }
+
+        dialog.show();
     }
 
     @Override
@@ -562,6 +628,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (id == R.id.nav_master_seed) {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
+        } else if (id == R.id.nav_scan_QR_code) {
+            new IntentIntegrator(main)
+                    .setBarcodeImageEnabled(true)
+                    .initiateScan();
         } else  if (id == R.id.nav_add_account) {
             generateAddress(coinHdCodeETH, publicKeysAdapter.getItemCount(), getPackageName(), false);
         } else if (id == R.id.nav_remove_all_account) {
