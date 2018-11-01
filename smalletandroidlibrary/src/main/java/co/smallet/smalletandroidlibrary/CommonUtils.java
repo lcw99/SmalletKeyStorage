@@ -18,6 +18,9 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -25,6 +28,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class CommonUtils {
     public static boolean isAppInstalled(Context context, String packageName) {
@@ -117,5 +121,19 @@ public class CommonUtils {
         i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
         context.startActivity(i);
+    }
+
+    public static Bundle jsonToBundel(JSONObject jsonObj) throws JSONException {
+        Bundle bundle = new Bundle();
+        Iterator iter = jsonObj.keys();
+        while(iter.hasNext()){
+            String key = (String)iter.next();
+            Object obj = jsonObj.get(key);
+            if (obj instanceof String)
+                bundle.putString(key, (String)obj);
+            else
+                bundle.putInt(key, (Integer)obj);
+        }
+        return bundle;
     }
 }

@@ -73,6 +73,7 @@ import java.util.Set;
 import co.smallet.keystorage.PublicKeysAdapter.ClickListener;
 import co.smallet.keystorage.database.KeystorageDatabase;
 import co.smallet.smalletandroidlibrary.AddressInfo;
+import co.smallet.smalletandroidlibrary.CommonUtils;
 import co.smallet.smalletandroidlibrary.GlobalConstants;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -203,13 +204,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     JSONObject qrJson = new JSONObject(resultStr);
                     int action = qrJson.getInt("action");
                     if (action == GlobalConstants.SERVICE_SIGN_TX) {
-                        Bundle bundle = new Bundle();
-                        Iterator iter = qrJson.keys();
-                        while(iter.hasNext()){
-                            String key = (String)iter.next();
-                            String value = qrJson.getString(key);
-                            bundle.putString(key,value);
-                        }
+                        Bundle bundle = CommonUtils.jsonToBundel(qrJson);
                         bundle.putString("extra", Constants.QR_CODE);
                         Message msgToSend = new Message();
                         msgToSend.what = Constants.SIGN_TX;
@@ -519,8 +514,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     PublicKeysAdapter publicKeysAdapter;
 
     private void showPublicKeys() {
-        if (coinList == null)
-            return;
         publicKeysAdapter = new PublicKeysAdapter(this, new ClickListener() {
             @Override
             public void onItemClicked(int position) {
@@ -544,6 +537,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
+
+        if (coinList == null)
+            return;
+
         ArrayList<AddressInfo> addressInfos = Utils.getAddressListForOwnerFromDatabase(null);
 
         for (AddressInfo ai : addressInfos) {
@@ -558,7 +555,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         rvPublicKeys.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private static  void showQRCode(String qrText, String title) {
+    private static void showQRCode(String qrText, String title) {
         AlertDialog.Builder builder = new AlertDialog.Builder(main);
         LayoutInflater inflater = main.getLayoutInflater();
         final View dialogView = inflater.inflate(R.layout.qrcode_dialog, null);
