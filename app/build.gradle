@@ -4,12 +4,13 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "co.smallet.keystorage"
-        minSdkVersion 23
+        minSdkVersion 18
         targetSdkVersion 27
-        versionCode 37
-        versionName "0.7.4.37"
+        versionCode 39
+        versionName "0.8.1.39"
         testInstrumentationRunner "android.support.metamask.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+        multiDexEnabled = true
     }
     buildTypes {
         release {
@@ -51,4 +52,5 @@ dependencies {
     implementation project(':smalletandroidlibrary')
     implementation 'com.google.zxing:core:3.3.0'
     implementation 'com.journeyapps:zxing-android-embedded:3.2.0@aar'
+    implementation 'com.android.support:multidex:1.0.3'
 }
